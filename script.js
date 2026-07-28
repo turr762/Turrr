@@ -1,304 +1,357 @@
-const ACCENTS = ["#1D4ED8", "#0B2A6B", "#0EA5E9", "#2C5282", "#3B82F6"];
-
-const DEFAULT_CANDIDATES = [
-  { id: "c1", name: "Aria Chen", slogan: "Every voice, one council.", bio: "Grade 11 · Debate Club captain, 2 years on the events committee.", accent: ACCENTS[0] },
-  { id: "c2", name: "Marcus Webb", slogan: "Built on trust, driven by action.", bio: "Grade 12 · Current treasurer, founded the peer-tutoring program.", accent: ACCENTS[1] },
-  { id: "c3", name: "Priya Patel", slogan: "Small steps. Big change.", bio: "Grade 11 · Sustainability club lead, organized 3 campus drives.", accent: ACCENTS[2] },
-];
-
-const DEFAULT_VOTERS = {
-  STU2026001: { password: "pass123", hasVoted: false },
-  STU2026002: { password: "pass123", hasVoted: false },
-  STU2026003: { password: "pass123", hasVoted: false },
+// Simulated Global Database (Shared across views via localStorage if available, or fallback mock data)
+const defaultDatabase = {
+    users: [
+        { id: "1001", pass: "123", name: "Andi Pratama", role: "siswa", voted: false, votedFor: "-" },
+        { id: "1002", pass: "123", name: "Siti Rahma", role: "siswa", voted: true, votedFor: "Paslon 01" },
+        { id: "2001", pass: "123", name: "Bapak Budi, S.Pd", role: "guru", voted: false, votedFor: "-" },
+        { id: "admin01", pass: "admin123", name: "Ibu Ratna (Panitia)", role: "admin", voted: false, votedFor: "-" }
+    ],
+    candidates: [
+        { id: 1, ketua: "Budi Santoso", wakil: "Citra Lestari", vision: "Mewujudkan OSIS yang aktif, kreatif, dan berintegritas tinggi.", votes: 1 },
+        { id: 2, ketua: "Doni Pratama", wakil: "Eva Meliana", vision: "Menjadikan sekolah pusat pengembangan bakat digital siswa.", votes: 0 },
+        { id: 3, ketua: "Fajar Hidayat", wakil: "Gita Safitri", vision: "Meningkatkan disiplin positif dan solidaritas antar angkatan.", votes: 0 }
+    ]
 };
 
-let candidates = [];
-let voters = {};
-let currentVoter = null;
-let selectedCandidateId = null;
-
-/* ---------- storage helpers (localStorage) ---------- */
-function loadJSON(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw === null) throw new Error("missing");
-    return JSON.parse(raw);
-  } catch {
-    localStorage.setItem(key, JSON.stringify(fallback));
-    return fallback;
-  }
-}
-function saveJSON(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
+// Initialize DB in localStorage if not exists
+function getDatabase() {
+    const saved = localStorage.getItem('osis_db_2026');
+    if (saved) {
+        return JSON.parse(saved);
+    }
+    localStorage.setItem('osis_db_2026', JSON.stringify(defaultDatabase));
+    return defaultDatabase;
 }
 
-/* ---------- utilities ---------- */
-function initials(name) {
-  return name.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase();
+function saveDatabase(db) {
+    localStorage.setItem('osis_db_2026', JSON.stringify(db));
 }
 
-function showScreen(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  updateSteps(id);
+// Custom Popup Replacement for alert()
+function showCustomAlert(title, message) {
+    const modal = document.getElementById('custom-alert-modal');
+    if (modal) {
+        document.getElementById('alert-title').innerText = title;
+        document.getElementById('alert-message').innerText = message;
+        modal.classList.remove('hidden');
+    } else {
+        alert(`${title}: ${message}`);
+    }
 }
 
-function updateSteps(screenId) {
-  const map = {
-    "screen-login": "login",
-    "screen-voting": "voting",
-    "screen-confirm": "confirm",
-    "screen-confirmed": "done",
-    "screen-already-voted": "done",
-  };
-  const order = ["login", "voting", "confirm", "done"];
-  const current = map[screenId] || "login";
-  const currentIdx = order.indexOf(current);
-
-  document.querySelectorAll(".step").forEach(el => {
-    const step = el.dataset.step;
-    const idx = order.indexOf(step);
-    el.classList.remove("active", "completed");
-    if (idx < currentIdx) el.classList.add("completed");
-    else if (idx === currentIdx) el.classList.add("active");
-  });
+function closeCustomAlert() {
+    const modal = document.getElementById('custom-alert-modal');
+    if (modal) modal.classList.add('hidden');
 }
 
-function showError(elId, textElId, message) {
-  const el = document.getElementById(elId);
-  el.classList.remove("hidden");
-  el.style.animation = "none";
-  void el.offsetWidth;
-  el.style.animation = "";
-  document.getElementById(textElId).textContent = message;
-}
-function hideError(elId) {
-  document.getElementById(elId).classList.add("hidden");
-}
+// Session State Handling
+let selectedCandidatePending = null;
 
-/* ---------- ripple effect for buttons ---------- */
-function attachRipple(el) {
-  el.addEventListener("click", (e) => {
-    if (el.disabled) return;
-    const rect = el.getBoundingClientRect();
-    const ripple = document.createElement("span");
-    const size = Math.max(rect.width, rect.height);
-    ripple.className = "ripple";
-    ripple.style.width = ripple.style.height = size + "px";
-    ripple.style.left = (e.clientX - rect.left - size / 2) + "px";
-    ripple.style.top = (e.clientY - rect.top - size / 2) + "px";
-    el.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 500);
-  });
-}
-document.querySelectorAll(".btn-primary, .btn-ghost").forEach(attachRipple);
+function handleLogin(event) {
+    event.preventDefault();
+    const inputId = document.getElementById('username').value.trim();
+    const inputPass = document.getElementById('password').value.trim();
 
-/* ---------- drifting background dots ---------- */
-function spawnDots() {
-  const field = document.getElementById("bgField");
-  const count = 22;
-  for (let i = 0; i < count; i++) {
-    const dot = document.createElement("div");
-    dot.className = "bg-dot";
-    const left = Math.random() * 100;
-    const duration = 14 + Math.random() * 16;
-    const delay = Math.random() * -duration;
-    const size = 2 + Math.random() * 3;
-    dot.style.left = left + "vw";
-    dot.style.bottom = "-10px";
-    dot.style.width = dot.style.height = size + "px";
-    dot.style.animationDuration = duration + "s";
-    dot.style.animationDelay = delay + "s";
-    field.appendChild(dot);
-  }
+    const db = getDatabase();
+    const user = db.users.find(u => u.id === inputId && u.pass === inputPass);
+
+    if (user) {
+        localStorage.setItem('osis_current_user', JSON.stringify(user));
+        window.location.href = 'portal.html';
+    } else {
+        showCustomAlert("Gagal Masuk", "NIS/ID atau Password salah! Periksa kembali data Anda.");
+    }
 }
 
-/* ---------- data load ---------- */
-function loadData() {
-  candidates = loadJSON("sc_candidates", DEFAULT_CANDIDATES);
-  voters = loadJSON("sc_voters", DEFAULT_VOTERS);
-  loadJSON("sc_votes", {});
-
-  document.getElementById("loadingScreen").style.display = "none";
-  document.getElementById("ballotCard").classList.add("active");
+function handleLogout() {
+    localStorage.removeItem('osis_current_user');
+    window.location.href = 'index.html';
 }
 
-/* ---------- candidates ---------- */
-function renderCandidates() {
-  const list = document.getElementById("candidateList");
-  list.innerHTML = "";
-  candidates.forEach(c => {
-    const line = document.createElement("div");
-    line.className = "ballot-line";
-    line.dataset.id = c.id;
-    line.innerHTML = `
-      <div class="ballot-line-main">
-        <div class="oval"><div class="oval-fill"></div></div>
-        <div class="avatar" style="background:${c.accent};">${initials(c.name)}</div>
-        <div>
-          <div class="cand-name">${c.name}</div>
-          <div class="cand-slogan">${c.slogan}</div>
-        </div>
-        <button class="expand-btn" type="button" aria-label="More about ${c.name}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-      </div>
-      <div class="cand-bio">${c.bio || "No bio provided yet."}</div>
-    `;
-    line.querySelector(".ballot-line-main").addEventListener("click", (e) => {
-      if (e.target.closest(".expand-btn")) return;
-      selectCandidate(c.id);
+// Page Load Controller for portal.html & results.html
+window.addEventListener('DOMContentLoaded', () => {
+    const currentUserJson = localStorage.getItem('osis_current_user');
+    const path = window.location.pathname;
+
+    // Handle portal.html protection
+    if (path.includes('portal.html')) {
+        if (!currentUserJson) {
+            window.location.href = 'index.html';
+            return;
+        }
+        const user = JSON.parse(currentUserJson);
+        document.getElementById('user-display-name').innerText = `${user.name} (${user.role.toUpperCase()})`;
+
+        if (user.role === 'admin') {
+            document.getElementById('admin-portal-view').classList.remove('hidden');
+            document.getElementById('voter-portal-view').classList.add('hidden');
+            renderAdminCandidates();
+            renderAdminVotersTable();
+        } else {
+            document.getElementById('voter-portal-view').classList.remove('hidden');
+            document.getElementById('admin-portal-view').classList.add('hidden');
+            renderVoterDashboard();
+        }
+    }
+
+    // Handle results.html standalone rendering
+    if (path.includes('results.html')) {
+        renderStandaloneResults();
+    }
+});
+
+// Voter Dashboard Logic
+function renderVoterDashboard() {
+    const db = getDatabase();
+    const currentUserJson = JSON.parse(localStorage.getItem('osis_current_user'));
+    const user = db.users.find(u => u.id === currentUserJson.id);
+
+    const grid = document.getElementById('voter-candidates-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    db.candidates.forEach(cand => {
+        grid.innerHTML += `
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-center space-x-2 mb-4">
+                        <div class="w-20 h-24 bg-slate-100 rounded border flex items-center justify-center text-[10px] text-slate-400 font-medium">Foto Ketua</div>
+                        <div class="w-20 h-24 bg-slate-100 rounded border flex items-center justify-center text-[10px] text-slate-400 font-medium">Foto Wakil</div>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-center">Paslon 0${cand.id}</h4>
+                    <p class="text-xs font-semibold text-blue-600 text-center mb-2">${cand.ketua} & ${cand.wakil}</p>
+                    <p class="text-xs text-slate-500 text-center italic mb-4">"${cand.vision}"</p>
+                </div>
+                <div>
+                    ${user.voted ? 
+                        `<button disabled class="w-full py-2 bg-slate-100 text-slate-400 rounded-lg text-xs font-medium cursor-not-allowed">Sudah Memilih</button>` :
+                        `<button onclick="openConfirmModal(${cand.id})" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition shadow">Pilih Paslon 0${cand.id}</button>`
+                    }
+                </div>
+            </div>
+        `;
     });
-    line.querySelector(".expand-btn").addEventListener("click", (e) => {
-      e.stopPropagation();
-      const btn = e.currentTarget;
-      const bio = line.querySelector(".cand-bio");
-      btn.classList.toggle("open");
-      bio.classList.toggle("open");
+
+    const banner = document.getElementById('voting-status-banner');
+    if (user.voted) {
+        banner.className = "p-4 rounded-xl text-center font-medium text-sm bg-emerald-50 text-emerald-800 border border-emerald-200";
+        banner.innerText = `Status: Anda sudah menggunakan hak suara (${user.votedFor}). Terima kasih!`;
+        setStepProgress(4);
+    } else {
+        banner.className = "p-4 rounded-xl text-center font-medium text-sm bg-amber-50 text-amber-800 border border-amber-200";
+        banner.innerText = "Status: Anda belum menggunakan hak suara. Silakan pilih kandidat di bawah.";
+        setStepProgress(2);
+    }
+}
+
+function setStepProgress(step) {
+    const s1 = document.getElementById('step-1-dot');
+    const s2 = document.getElementById('step-2-dot');
+    const s3 = document.getElementById('step-3-dot');
+    const s4 = document.getElementById('step-4-dot');
+    if (!s1) return;
+
+    s1.className = step >= 1 ? "w-3 h-3 rounded-full bg-blue-600" : "w-3 h-3 rounded-full bg-slate-300";
+    s2.className = step >= 2 ? "w-3 h-3 rounded-full bg-blue-600" : "w-3 h-3 rounded-full bg-slate-300";
+    s3.className = step >= 3 ? "w-3 h-3 rounded-full bg-blue-600" : "w-3 h-3 rounded-full bg-slate-300";
+    s4.className = step >= 4 ? "w-3 h-3 rounded-full bg-blue-600" : "w-3 h-3 rounded-full bg-slate-300";
+}
+
+function openConfirmModal(candId) {
+    const db = getDatabase();
+    selectedCandidatePending = db.candidates.find(c => c.id === candId);
+    
+    document.getElementById('modal-candidate-title').innerText = `Paslon 0${selectedCandidatePending.id}`;
+    document.getElementById('modal-candidate-names').innerText = `${selectedCandidatePending.ketua} & ${selectedCandidatePending.wakil}`;
+    document.getElementById('modal-candidate-bold-name').innerText = `${selectedCandidatePending.ketua} & ${selectedCandidatePending.wakil}`;
+    
+    document.getElementById('custom-confirm-modal').classList.remove('hidden');
+    setStepProgress(3);
+}
+
+function closeConfirmModal() {
+    selectedCandidatePending = null;
+    document.getElementById('custom-confirm-modal').classList.add('hidden');
+    setStepProgress(2);
+}
+
+function executeFinalVote() {
+    if (!selectedCandidatePending) return;
+
+    let db = getDatabase();
+    const currentUserJson = JSON.parse(localStorage.getItem('osis_current_user'));
+
+    // Update candidate votes
+    const targetCand = db.candidates.find(c => c.id === selectedCandidatePending.id);
+    if (targetCand) targetCand.votes += 1;
+
+    // Update user status
+    const targetUser = db.users.find(u => u.id === currentUserJson.id);
+    if (targetUser) {
+        targetUser.voted = true;
+        targetUser.votedFor = `Paslon 0${selectedCandidatePending.id}`;
+        localStorage.setItem('osis_current_user', JSON.stringify(targetUser));
+    }
+
+    saveDatabase(db);
+    document.getElementById('custom-confirm-modal').classList.add('hidden');
+    setStepProgress(4);
+    renderVoterDashboard();
+    showCustomAlert("Berhasil", "Suara Anda berhasil disimpan ke database secara permanen!");
+}
+
+// Standalone Results Website Rendering
+function renderStandaloneResults() {
+    const db = getDatabase();
+    const container = document.getElementById('public-results-breakdown');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const totalVotes = db.candidates.reduce((sum, c) => sum + c.votes, 0);
+    const totalVoters = db.users.filter(u => u.role !== 'admin').length;
+
+    document.getElementById('public-total-votes').innerText = totalVotes;
+    document.getElementById('public-total-voters').innerText = totalVoters;
+
+    db.candidates.forEach(cand => {
+        const percent = totalVotes > 0 ? Math.round((cand.votes / totalVotes) * 100) : 0;
+        container.innerHTML += `
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                <div class="flex justify-between text-sm font-semibold text-slate-800">
+                    <span>Paslon 0${cand.id}: ${cand.ketua} & ${cand.wakil}</span>
+                    <span>${cand.votes} Suara (${percent}%)</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                    <div class="bg-blue-600 h-3 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                </div>
+            </div>
+        `;
     });
-    list.appendChild(line);
-  });
 }
 
-function selectCandidate(id) {
-  selectedCandidateId = id;
-  document.querySelectorAll(".ballot-line").forEach(el => {
-    el.classList.toggle("selected", el.dataset.id === id);
-  });
-  document.getElementById("castVoteBtn").disabled = false;
+// Admin Panel Logic
+function switchAdminTab(tab) {
+    const pageCandidates = document.getElementById('admin-page-candidates');
+    const pageVoters = document.getElementById('admin-page-voters');
+    const btnCand = document.getElementById('admin-tab-candidates');
+    const btnVot = document.getElementById('admin-tab-voters');
+
+    if (tab === 'candidates') {
+        pageCandidates.classList.remove('hidden');
+        pageVoters.classList.add('hidden');
+        btnCand.className = "px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg text-sm shadow";
+        btnVot.className = "px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium rounded-lg text-sm";
+    } else {
+        pageCandidates.classList.add('hidden');
+        pageVoters.classList.remove('hidden');
+        btnVot.className = "px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg text-sm shadow";
+        btnCand.className = "px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium rounded-lg text-sm";
+        renderAdminVotersTable();
+    }
 }
 
-/* ---------- ink burst on confirm ---------- */
-function fireInkBurst() {
-  const burst = document.getElementById("inkBurst");
-  burst.innerHTML = "";
-  const n = 10;
-  for (let i = 0; i < n; i++) {
-    const dot = document.createElement("span");
-    const angle = (Math.PI * 2 * i) / n;
-    const dist = 60 + Math.random() * 30;
-    dot.style.setProperty("--bx", Math.cos(angle) * dist + "px");
-    dot.style.setProperty("--by", Math.sin(angle) * dist + "px");
-    dot.style.animationDelay = (Math.random() * 0.1) + "s";
-    burst.appendChild(dot);
-  }
+function renderAdminCandidates() {
+    const db = getDatabase();
+    const list = document.getElementById('admin-candidates-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    db.candidates.forEach(cand => {
+        list.innerHTML += `
+            <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
+                <h4 class="font-bold text-slate-800">Paslon 0${cand.id}</h4>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Ketua & Wakil</label>
+                    <input type="text" id="admin-name-${cand.id}" value="${cand.ketua} & ${cand.wakil}" class="w-full px-3 py-1.5 border border-slate-300 rounded text-xs bg-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Visi Misi</label>
+                    <textarea id="admin-vision-${cand.id}" class="w-full px-3 py-1.5 border border-slate-300 rounded text-xs bg-white h-16">${cand.vision}</textarea>
+                </div>
+                <button onclick="updateCandidateInfo(${cand.id})" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-medium transition">Simpan Perubahan</button>
+            </div>
+        `;
+    });
 }
 
-/* ---------- reset ---------- */
-function resetKiosk() {
-  document.getElementById("idInput").value = "";
-  document.getElementById("pwInput").value = "";
-  hideError("loginError");
-  currentVoter = null;
-  selectedCandidateId = null;
-  showScreen("screen-login");
-  loadData();
+function updateCandidateInfo(id) {
+    let db = getDatabase();
+    const nameInput = document.getElementById(`admin-name-${id}`).value;
+    const visionInput = document.getElementById(`admin-vision-${id}`).value;
+    const parts = nameInput.split('&');
+
+    const cand = db.candidates.find(c => c.id === id);
+    if (cand) {
+        if (parts.length >= 2) {
+            cand.ketua = parts[0].trim();
+            cand.wakil = parts[1].trim();
+        }
+        cand.vision = visionInput.trim();
+        saveDatabase(db);
+        showCustomAlert("Sukses", `Data Paslon 0${id} berhasil diperbarui di database!`);
+    }
 }
 
-/* ---------- events ---------- */
-document.getElementById("loginForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const id = document.getElementById("idInput").value.trim().toUpperCase();
-  const pw = document.getElementById("pwInput").value;
-  const record = voters[id];
+function renderAdminVotersTable(filterText = '') {
+    const db = getDatabase();
+    const tbody = document.getElementById('admin-voter-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
 
-  if (!record) {
-    showError("loginError", "loginErrorText", "ID card not recognized. Check the number and try again.");
-    return;
-  }
-  if (record.password !== pw) {
-    showError("loginError", "loginErrorText", "Incorrect password.");
-    return;
-  }
-  hideError("loginError");
-  currentVoter = id;
+    const filteredUsers = db.users.filter(u => u.role !== 'admin' && (u.id.toLowerCase().includes(filterText) || u.name.toLowerCase().includes(filterText)));
 
-  if (record.hasVoted) {
-    document.getElementById("alreadyVotedId").textContent = id;
-    showScreen("screen-already-voted");
-  } else {
-    selectedCandidateId = null;
-    document.getElementById("voterIdLabel").textContent = id;
-    document.getElementById("castVoteBtn").disabled = true;
-    renderCandidates();
-    showScreen("screen-voting");
-  }
-});
+    filteredUsers.forEach(u => {
+        tbody.innerHTML += `
+            <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                <td class="p-4 font-semibold text-slate-900">${u.id}</td>
+                <td class="p-4 text-slate-700">${u.name}</td>
+                <td class="p-4"><span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs uppercase font-medium">${u.role}</span></td>
+                <td class="p-4">
+                    ${u.voted ? 
+                        '<span class="text-emerald-600 font-semibold text-xs">Sudah Memilih</span>' : 
+                        '<span class="text-amber-600 font-semibold text-xs">Belum Memilih</span>'
+                    }
+                </td>
+                <td class="p-4 text-slate-600 font-medium">${u.votedFor}</td>
+                <td class="p-4 text-center">
+                    ${u.voted ? 
+                        `<button onclick="resetVoterAccount('${u.id}')" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium rounded transition shadow-sm">Unblock / Reset</button>` : 
+                        `<span class="text-xs text-slate-400 italic">Normal</span>`
+                    }
+                </td>
+            </tr>
+        `;
+    });
+}
 
-document.getElementById("togglePw").addEventListener("click", () => {
-  const pw = document.getElementById("pwInput");
-  const btn = document.getElementById("togglePw");
-  const isHidden = pw.type === "password";
-  pw.type = isHidden ? "text" : "password";
-  btn.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
-});
+function filterVoterTable() {
+    const query = document.getElementById('voter-search-input').value.toLowerCase();
+    renderAdminVotersTable(query);
+}
 
-document.getElementById("castVoteBtn").addEventListener("click", () => {
-  if (!selectedCandidateId) return;
-  const cand = candidates.find(c => c.id === selectedCandidateId);
-  document.getElementById("confirmName").textContent = cand.name;
-  showScreen("screen-confirm");
-});
+function resetVoterAccount(userId) {
+    let db = getDatabase();
+    const user = db.users.find(u => u.id === userId);
 
-document.getElementById("backToVoting").addEventListener("click", () => {
-  showScreen("screen-voting");
-});
+    if (user && user.voted) {
+        const previousVotePaslon = user.votedFor;
+        
+        // Subtract vote from target candidate count safely
+        db.candidates.forEach(cand => {
+            if (`Paslon 0${cand.id}` === previousVotePaslon && cand.votes > 0) {
+                cand.votes -= 1;
+            }
+        });
 
-document.getElementById("confirmVoteBtn").addEventListener("click", () => {
-  const btn = document.getElementById("confirmVoteBtn");
-  btn.disabled = true;
-  btn.textContent = "Recording…";
+        user.voted = false;
+        user.votedFor = "-";
+        saveDatabase(db);
 
-  setTimeout(() => {
-    const votes = loadJSON("sc_votes", {});
-    votes[selectedCandidateId] = (votes[selectedCandidateId] || 0) + 1;
-    saveJSON("sc_votes", votes);
+        renderAdminVotersTable(document.getElementById('voter-search-input').value.toLowerCase());
+        showCustomAlert("Akun Direset", `Akun NIS ${user.id} (${user.name}) berhasil di-reset. Pemilih kini dapat melakukan voting kembali.`);
+    }
+}
 
-    voters[currentVoter] = { ...voters[currentVoter], hasVoted: true };
-    saveJSON("sc_voters", voters);
-
-    document.getElementById("confirmedVoterId").textContent = currentVoter;
-    showScreen("screen-confirmed");
-    fireInkBurst();
-
-    btn.disabled = false;
-    btn.textContent = "Confirm My Vote";
-  }, 450); // brief pause so "Recording…" state is visible
-});
-
-document.getElementById("doneBtn").addEventListener("click", resetKiosk);
-document.getElementById("backToLoginBtn").addEventListener("click", resetKiosk);
-
-/* ---------- admin modal ---------- */
-const adminModal = document.getElementById("adminModal");
-document.getElementById("openAdmin").addEventListener("click", () => adminModal.classList.add("active"));
-document.getElementById("closeAdmin").addEventListener("click", () => adminModal.classList.remove("active"));
-adminModal.addEventListener("click", (e) => {
-  if (e.target === adminModal) adminModal.classList.remove("active");
-});
-
-const newCandName = document.getElementById("newCandName");
-const addCandidateBtn = document.getElementById("addCandidateBtn");
-newCandName.addEventListener("input", () => {
-  addCandidateBtn.disabled = !newCandName.value.trim();
-});
-
-addCandidateBtn.addEventListener("click", () => {
-  const name = newCandName.value.trim();
-  if (!name) return;
-  const slogan = document.getElementById("newCandSlogan").value.trim() || "Running for Student Council President";
-  const bio = document.getElementById("newCandBio").value.trim();
-  const accent = ACCENTS[candidates.length % ACCENTS.length];
-  candidates.push({ id: "c" + Date.now(), name, slogan, bio, accent });
-  saveJSON("sc_candidates", candidates);
-
-  newCandName.value = "";
-  document.getElementById("newCandSlogan").value = "";
-  document.getElementById("newCandBio").value = "";
-  addCandidateBtn.disabled = true;
-  adminModal.classList.remove("active");
-});
-
-/* ---------- init ---------- */
-spawnDots();
-loadData();
+function exportData(format) {
+    showCustomAlert("Export Data", `Mengekspor laporan rekapitulasi sistem dalam format ${format.toUpperCase()}... File laporan akan segera diunduh otomatis.`);
+}
