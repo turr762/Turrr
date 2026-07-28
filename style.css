@@ -1,13 +1,13 @@
-root {
-  --ink: #1B2340;
-  --ink-deep: #12172A;
-  --paper: #F7F4EA;
-  --paper-edge: #E8E1CC;
-  --gold: #C9A24B;
-  --gold-soft: #DEC17E;
-  --stamp-red: #A5382A;
-  --text-ink: #232B45;
-  --muted: #756F5C;
+:root {
+  --ink: #1D4ED8;
+  --ink-deep: #0B2A6B;
+  --paper: #FFFFFF;
+  --paper-edge: #D3E1FA;
+  --gold: #0EA5E9;
+  --gold-soft: #BFE0FF;
+  --stamp-red: #C0392B;
+  --text-ink: #14224A;
+  --muted: #5B6B8C;
 }
 
 * { box-sizing: border-box; }
@@ -20,7 +20,7 @@ html, body {
 }
 
 body {
-  background: radial-gradient(ellipse at 50% -10%, #2A3560 0%, var(--ink) 55%, var(--ink-deep) 100%);
+  background: radial-gradient(ellipse at 50% -10%, #3B82F6 0%, var(--ink) 55%, var(--ink-deep) 100%);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -43,7 +43,7 @@ body {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: rgba(222, 193, 126, 0.35);
+  background: rgba(255, 255, 255, 0.55);
   animation: drift linear infinite;
 }
 @keyframes drift {
@@ -90,10 +90,19 @@ body {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+.ribbon {
+  height: 8px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--ink) 0px, var(--ink) 14px,
+    #FFFFFF 14px, #FFFFFF 28px
+  );
+}
+
 .stub {
   padding: 28px 32px 20px;
   text-align: center;
-  background: linear-gradient(180deg, #FBF9F2, var(--paper));
+  background: linear-gradient(180deg, #EEF4FF, var(--paper));
 }
 
 .perforation {
