@@ -1,4 +1,4 @@
-const ACCENTS = ["#4C6B8A", "#6B8A4C", "#8A4C6B", "#8A6B4C", "#4C8A82"];
+const ACCENTS = ["#1D4ED8", "#0B2A6B", "#0EA5E9", "#2C5282", "#3B82F6"];
 
 const DEFAULT_CANDIDATES = [
   { id: "c1", name: "Aria Chen", slogan: "Every voice, one council.", bio: "Grade 11 · Debate Club captain, 2 years on the events committee.", accent: ACCENTS[0] },
