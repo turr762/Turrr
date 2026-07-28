@@ -1,161 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Student Council Election — Presidential Ballot</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Source+Serif+4:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistem Pemilihan OSIS 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="bg-gradient-to-br from-blue-900 to-indigo-950 min-h-screen text-slate-100 font-sans antialiased flex items-center justify-center p-4">
 
-  <!-- drifting background dots -->
-  <div class="bg-field" id="bgField"></div>
-
-  <div class="loading" id="loadingScreen"><span class="eyebrow">Opening the booth…</span></div>
-
-  <div class="ballot-card" id="ballotCard">
-    <div class="ribbon"></div>
-    <div class="stub">
-      <span class="eyebrow" style="color: var(--muted);">Student Council Election · 2026</span>
-      <div class="display" style="font-size:26px; margin-top:4px; color: var(--ink);">Presidential Ballot</div>
-
-      <!-- step progress -->
-      <div class="steps" id="steps">
-        <div class="step active" data-step="login"><span class="step-dot"></span><span class="step-label">Login</span></div>
-        <div class="step-line"></div>
-        <div class="step" data-step="voting"><span class="step-dot"></span><span class="step-label">Vote</span></div>
-        <div class="step-line"></div>
-        <div class="step" data-step="confirm"><span class="step-dot"></span><span class="step-label">Confirm</span></div>
-        <div class="step-line"></div>
-        <div class="step" data-step="done"><span class="step-dot"></span><span class="step-label">Done</span></div>
-      </div>
-    </div>
-    <div class="perforation"></div>
-
-    <!-- LOGIN -->
-    <div class="screen active" id="screen-login">
-      <div class="body-pad">
-        <div class="error-row hidden" id="storageWarning">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span>Running without saved storage this session — votes won't persist after reload.</span>
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="max-w-md w-full bg-white text-slate-800 rounded-2xl shadow-2xl p-8 border border-slate-100">
+        <div class="text-center mb-8">
+            <span class="text-xs font-semibold tracking-wider text-indigo-600 uppercase">Student Council Election • 2026</span>
+            <h1 class="text-2xl font-bold text-slate-900 mt-1">Sistem Pemilihan OSIS</h1>
+            <p class="text-sm text-slate-500 mt-1">Silakan masuk dengan NIS / ID Anda</p>
         </div>
-        <div class="error-row hidden" id="loginError">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span id="loginErrorText"></span>
-        </div>
-        <form id="loginForm">
-          <div style="margin-bottom:16px;">
-            <label class="field-label">Student ID Card</label>
-            <input class="field" id="idInput" placeholder="STU2026001" autocomplete="off" />
-          </div>
-          <div style="margin-bottom:22px;">
-            <label class="field-label">Password</label>
-            <div class="field-with-icon">
-              <input class="field" id="pwInput" type="password" placeholder="••••••••" />
-              <button type="button" class="icon-toggle" id="togglePw" aria-label="Show password">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
+        <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">NIS / ID Akun</label>
+                <input type="text" id="username" required placeholder="Contoh: 1001 atau admin01" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
             </div>
-          </div>
-          <button type="submit" class="btn-primary">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            Enter Booth
-          </button>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <input type="password" id="password" required placeholder="••••••••" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition duration-200 shadow-md">
+                Masuk Sistem
+            </button>
         </form>
-        <div class="hint">Demo ID: STU2026001 &nbsp;·&nbsp; Password: pass123</div>
-        <button class="admin-link" id="openAdmin">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-          Election admin
-        </button>
-      </div>
-    </div>
-
-    <!-- VOTING -->
-    <div class="screen" id="screen-voting">
-      <div class="body-pad">
-        <div class="row-between">
-          <span class="field-label" style="margin-bottom:0;">Voter <span id="voterIdLabel"></span></span>
-          <span class="secret-tag">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Secret ballot
-          </span>
+        
+        <div class="mt-6 flex justify-between items-center text-xs">
+            <a href="results.html" target="_blank" class="text-blue-600 hover:underline font-medium"> Lihat Hasil Hitung Cepat &rarr;</a>
+            <span class="text-slate-400">v2.6 Secure</span>
         </div>
-        <div id="candidateList"></div>
-        <button class="btn-primary" style="margin-top:14px;" id="castVoteBtn" disabled>
-          Cast Vote
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </button>
-      </div>
-    </div>
 
-    <!-- CONFIRM -->
-    <div class="screen" id="screen-confirm">
-      <div class="body-pad">
-        <button class="btn-ghost btn-inline" id="backToVoting">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          Back
-        </button>
-        <p class="confirm-text">
-          You're about to vote for <strong id="confirmName"></strong>. This cannot be changed once submitted.
-        </p>
-        <button class="btn-primary" id="confirmVoteBtn">Confirm My Vote</button>
-      </div>
-    </div>
-
-    <!-- CONFIRMED -->
-    <div class="screen" id="screen-confirmed">
-      <div class="body-pad" style="text-align:center;">
-        <div class="stamp-wrap">
-          <div class="stamp"><span class="stamp-text">VOTED</span></div>
-          <div class="ink-burst" id="inkBurst"></div>
+        <div class="mt-4 text-xs text-slate-400 bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <span class="font-semibold text-slate-600">Info Akun Uji Coba:</span><br>
+            • Siswa: <code class="text-blue-600">1001</code> / pass: <code class="text-slate-600">123</code><br>
+            • Guru: <code class="text-blue-600">2001</code> / pass: <code class="text-slate-600">123</code><br>
+            • Admin: <code class="text-blue-600">admin01</code> / pass: <code class="text-slate-600">admin123</code>
         </div>
-        <div class="display" style="font-size:20px; color: var(--ink); margin-top:4px;">Thanks, vote recorded</div>
-        <p class="sub-text">Card <span id="confirmedVoterId"></span> is now locked for this election.</p>
-        <button class="btn-ghost" id="doneBtn">Done · Next Voter</button>
-      </div>
     </div>
 
-    <!-- ALREADY VOTED -->
-    <div class="screen" id="screen-already-voted">
-      <div class="body-pad" style="text-align:center;">
-        <div class="stamp-wrap"><div class="stamp muted-stamp"><span class="stamp-text muted-text">VOTED</span></div></div>
-        <div class="display" style="font-size:18px; color: var(--ink);">This card already voted</div>
-        <p class="sub-text">Card <span id="alreadyVotedId"></span> was locked after casting a vote. Each student votes once.</p>
-        <button class="btn-ghost" id="backToLoginBtn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          Back to Login
-        </button>
-      </div>
+    <!-- CUSTOM NOTIFICATION MODAL (Replaces Browser Alerts) -->
+    <div id="custom-alert-modal" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white text-slate-900 rounded-2xl max-w-sm w-full shadow-2xl p-6 text-center space-y-4 border border-slate-200">
+            <div id="alert-icon-wrapper" class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto font-bold text-xl">i</div>
+            <h4 id="alert-title" class="text-lg font-bold text-slate-900">Informasi Sistem</h4>
+            <p id="alert-message" class="text-sm text-slate-600">Pesan sistem akan muncul di sini.</p>
+            <button onclick="closeCustomAlert()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition shadow">Mengerti</button>
+        </div>
     </div>
-  </div>
 
-  <!-- ADMIN MODAL -->
-  <div class="modal-backdrop" id="adminModal">
-    <div class="modal">
-      <div class="modal-header">
-        <span class="display" style="font-size:18px; color: var(--ink);">Add Candidate</span>
-        <button class="icon-btn" id="closeAdmin">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <label class="field-label">Candidate Name</label>
-      <input class="field" id="newCandName" style="margin-bottom:12px;" placeholder="Full name" />
-      <label class="field-label">Slogan (optional)</label>
-      <input class="field" id="newCandSlogan" style="margin-bottom:12px;" placeholder="Campaign slogan" />
-      <label class="field-label">Short bio (optional)</label>
-      <input class="field" id="newCandBio" style="margin-bottom:16px;" placeholder="One line about them" />
-      <button class="btn-primary" id="addCandidateBtn" disabled>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add to Ballot
-      </button>
-      <p class="admin-note">
-        This is a lightweight in-app editor. Swap it for your real backend/admin site by writing to the same "sc_candidates" storage key.
-      </p>
-    </div>
-  </div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
