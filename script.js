@@ -108,7 +108,7 @@ async function renderVoterPortal() {
                         </div>
                         <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Nomor Urut ${cId}</span>
                         <h4 class="text-lg font-bold text-slate-900 mt-1">${c.names}</h4>
-                        <p class="text-xs text-slate-600 mt-2 line-clamp-4"><strong>Visi & Misi:</strong> ${c.vision || '-'}</p>
+                        <p class="text-xs text-slate-600 mt-2 line-clamp-4"><strong>Visi:</strong> ${c.vision || '-'}</p>
                     </div>
                     <button onclick="${currentUser.hasVoted ? `showAlert('Info', 'Anda sudah memilih!')` : `openConfirmModal('${cId}', '${c.names}')`}" 
                         class="mt-5 w-full py-2.5 ${currentUser.hasVoted ? 'bg-slate-300 cursor-not-allowed text-slate-600' : 'bg-blue-600 hover:bg-blue-700 text-white shadow'} font-semibold rounded-xl transition">
@@ -138,7 +138,7 @@ function closeConfirmModal() {
     document.getElementById('custom-confirm-modal').classList.add('hidden');
 }
 
-// 4. Execute Final Vote with Immediate Redirection Back to Login Screen (No Browser Alert)
+// 4. Execute Final Vote with Immediate Redirection Back to Login Screen
 async function executeFinalVote() {
     if (isSubmitting) return; 
     isSubmitting = true;
@@ -175,7 +175,6 @@ async function executeFinalVote() {
 
         closeConfirmModal();
 
-        // Immediately clear session and return to login without pop-up alerts
         localStorage.removeItem("current_user_id");
         currentUser = null;
         isSubmitting = false;
@@ -192,7 +191,7 @@ async function executeFinalVote() {
     }
 }
 
-// 5. Admin Panel & Candidate Management (Photo URL, Crop & Vision Updates)
+// 5. Admin Panel & Candidate Management (Only Visi & Cropped Photo)
 function switchAdminTab(tabName) {
     const candBtn = document.getElementById('admin-tab-candidates');
     const voterBtn = document.getElementById('admin-tab-voters');
@@ -228,21 +227,18 @@ async function loadAdminCandidates() {
                     </div>
                     
                     <div class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">URL Foto (Drive / ImgBB)</label>
-                            <div class="flex space-x-2">
-                                <input type="text" id="photoUrl-${id}" value="${c.photoUrl || ''}" placeholder="https://..." class="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500">
-                                <button type="button" onclick="openCropper('${id}')" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-xl transition whitespace-nowrap">
-                                    Crop Foto
-                                </button>
-                            </div>
+                        <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <span class="text-xs font-semibold text-slate-700">Foto Tersimpan di Database</span>
+                            <button type="button" onclick="openCropper('${id}')" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-xl transition whitespace-nowrap shadow">
+                                Ubah & Crop Foto Baru
+                            </button>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Ubah Visi & Misi</label>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Ubah Visi</label>
                             <textarea id="vision-${id}" rows="3" class="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500">${c.vision || ''}</textarea>
                         </div>
                         <button type="button" onclick="saveCandidateChanges('${id}')" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition shadow">
-                            Simpan Perubahan Kandidat
+                            Simpan Perubahan Visi
                         </button>
                     </div>
                 </div>
@@ -254,18 +250,17 @@ async function loadAdminCandidates() {
     }
 }
 
-// Open the Cropper Modal
+// Open Cropper Modal by asking for source image link first
 function openCropper(id) {
     activeCandidateId = id;
-    const url = document.getElementById(`photoUrl-${id}`).value.trim();
+    const sourceUrl = prompt("Masukkan link gambar asal (Google Drive/ImgBB) untuk di-crop:");
     
-    if (!url) {
-        showAlert("Perhatian", "Masukkan URL foto terlebih dahulu sebelum melakukan crop!");
+    if (!sourceUrl || !sourceUrl.trim()) {
         return;
     }
 
     const imageElement = document.getElementById('imageToCrop');
-    imageElement.src = url;
+    imageElement.src = sourceUrl.trim();
     
     document.getElementById('cropModal').classList.remove('hidden');
 
@@ -289,7 +284,7 @@ function closeCropModal() {
     }
 }
 
-// Process Cropped Image and Save Automatically
+// Process Cropped Image and Save Directly to Firebase
 async function saveCroppedImage() {
     if (!cropper) return;
 
@@ -300,23 +295,31 @@ async function saveCroppedImage() {
 
     const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
 
-    document.getElementById(`photoUrl-${activeCandidateId}`).value = croppedDataUrl;
     closeCropModal();
     
-    await saveCandidateChanges(activeCandidateId);
+    // Save directly to Firestore database field photoUrl
+    try {
+        const candidateRef = window.FS.doc(window.db, "candidates", activeCandidateId);
+        await window.FS.updateDoc(candidateRef, {
+            photoUrl: croppedDataUrl
+        });
+        showAlert("Berhasil", `Foto Paslon ${activeCandidateId} berhasil diperbarui ke database!`);
+        loadAdminCandidates();
+    } catch (e) {
+        console.error(e);
+        showAlert("Gagal", "Gagal menyimpan foto ke database.");
+    }
 }
 
 async function saveCandidateChanges(id) {
-    const newPhotoUrl = document.getElementById(`photoUrl-${id}`).value.trim();
     const newVision = document.getElementById(`vision-${id}`).value;
 
     try {
         const candidateRef = window.FS.doc(window.db, "candidates", id);
         await window.FS.updateDoc(candidateRef, {
-            photoUrl: newPhotoUrl,
             vision: newVision
         });
-        showAlert("Berhasil", `Data Paslon ${id} berhasil diperbarui!`);
+        showAlert("Berhasil", `Visi Paslon ${id} berhasil diperbarui!`);
         loadAdminCandidates();
     } catch (e) {
         console.error(e);
