@@ -3,174 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Pemilihan Ketua OSIS 2026</title>
-    <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyB1Ab-K6ehYQZbjX-QxJQiodqSajGPFdmE",
-    authDomain: "pemilihan-ketos-2627.firebaseapp.com",
-    projectId: "pemilihan-ketos-2627",
-    storageBucket: "pemilihan-ketos-2627.firebasestorage.app",
-    messagingSenderId: "924205874158",
-    appId: "1:924205874158:web:be0bab0495c02d1182acff"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  window.db = getFirestore(app);
-  window.FS = { doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot };
-</script>
-
+    <title>Pemilihan Ketua OSIS</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gradient-to-br from-blue-900 to-indigo-950 min-h-screen text-slate-100 font-sans antialiased flex flex-col justify-between p-4">
+<body class="bg-slate-900 text-slate-800 min-h-screen flex items-center justify-center p-4">
 
-    <!-- MAIN APP CONTAINER -->
-    <div class="max-w-4xl w-full mx-auto my-auto">
+    <!-- Main Container -->
+    <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden relative">
 
-        <!-- VIEW 1: LOGIN SCREEN -->
-        <div id="view-login" class="max-w-md mx-auto bg-white text-slate-800 rounded-2xl shadow-2xl p-8 border border-slate-100">
+        <!-- VIEW 1: LOGIN -->
+        <div id="view-login" class="p-8 sm:p-12 max-w-md mx-auto">
             <div class="text-center mb-8">
-                <span class="text-xs font-semibold tracking-wider text-indigo-600 uppercase">Pemilihan Ketua OSIS • 2026</span>
-                <h1 class="text-2xl font-bold text-slate-900 mt-1">Sistem Pemilihan Ketua OSIS</h1>
-                <p class="text-sm text-slate-500 mt-1">Silakan masuk dengan NIS / ID Anda</p>
+                <div class="inline-flex p-3 bg-indigo-50 text-indigo-600 rounded-2xl text-2xl mb-3 shadow-inner">
+                    <i class="fa-solid fa-check-to-slot"></i>
+                </div>
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight">Pemilihan Ketua OSIS</h2>
+                <p class="text-xs text-slate-500 mt-1">Silakan masuk menggunakan NIS/ID dan kata sandi Anda</p>
             </div>
+
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">NIS / ID Akun</label>
-                    <input type="text" id="username" required placeholder="Contoh: 1001 atau admin01" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">NIS / ID Akun</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fa-solid fa-id-card"></i></span>
+                        <input type="text" id="username" required placeholder="Contoh: 1001" 
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 transition">
+                    </div>
                 </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Kata Sandi</label>
-                    <input type="password" id="password" required placeholder="••••••••" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Kata Sandi</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" id="password" required placeholder="••••••••" 
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 transition">
+                    </div>
                 </div>
-                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition duration-200 shadow-md">
+
+                <button type="submit" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition text-sm">
                     Masuk Sistem
                 </button>
             </form>
+
+            <div class="mt-6 flex justify-between items-center text-xs">
+                <a href="results.html" class="text-indigo-600 font-semibold hover:underline">
+                    <i class="fa-solid fa-chart-pie mr-1"></i> Lihat Hasil Pemilihan Sementara
+                </a>
+            </div>
         </div>
 
-        <!-- VIEW 2: LOGGED-IN APP WRAPPER (Voter & Admin) -->
-        <div id="view-app-container" class="hidden bg-white text-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
-
-            <!-- Header -->
-            <header class="bg-slate-900 text-white px-8 py-4 flex justify-between items-center">
-                <div>
-                    <span class="text-xs text-blue-400 font-semibold tracking-wider uppercase">Portal Pemilihan Ketua OSIS</span>
-                    <h2 id="user-display-name" class="text-lg font-bold">Nama User</h2>
-                </div>
+        <!-- VIEW 2: DASHBOARD (App Container) -->
+        <div id="view-app-container" class="hidden flex flex-col min-h-[600px]">
+            <!-- Top Navbar -->
+            <header class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
                 <div class="flex items-center space-x-3">
-                    <button onclick="handleLogout()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-sm font-medium rounded-lg transition">Keluar</button>
+                    <div class="bg-indigo-600 p-2 rounded-xl text-sm"><i class="fa-solid fa-check-to-slot"></i></div>
+                    <div>
+                        <h1 class="font-bold text-sm leading-tight">Pemilihan Ketua OSIS</h1>
+                        <p class="text-[10px] text-slate-400" id="user-display-name">Memuat pengguna...</p>
+                    </div>
                 </div>
+                <button onclick="handleLogout()" class="px-3.5 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white text-xs font-semibold rounded-xl transition border border-rose-500/20">
+                    <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Keluar
+                </button>
             </header>
 
-            <!-- SUB-VIEW A: VOTER PORTAL (Students & Teachers) -->
-            <div id="subview-voter" class="p-8 space-y-6 hidden">
-                <div class="flex items-center justify-center space-x-4 pb-6 border-b border-slate-100">
-                    <div class="flex flex-col items-center"><div id="step-1-dot" class="w-3 h-3 rounded-full bg-blue-600"></div><span class="text-[10px] text-slate-400 mt-1 uppercase font-semibold">Masuk</span></div>
-                    <div class="w-12 h-0.5 bg-slate-200"></div>
-                    <div class="flex flex-col items-center"><div id="step-2-dot" class="w-3 h-3 rounded-full bg-slate-300"></div><span class="text-[10px] text-slate-400 mt-1 uppercase font-semibold">Pilih</span></div>
-                    <div class="w-12 h-0.5 bg-slate-200"></div>
-                    <div class="flex flex-col items-center"><div id="step-3-dot" class="w-3 h-3 rounded-full bg-slate-300"></div><span class="text-[10px] text-slate-400 mt-1 uppercase font-semibold">Konfirmasi</span></div>
-                    <div class="w-12 h-0.5 bg-slate-200"></div>
-                    <div class="flex flex-col items-center"><div id="step-4-dot" class="w-3 h-3 rounded-full bg-slate-300"></div><span class="text-[10px] text-slate-400 mt-1 uppercase font-semibold">Selesai</span></div>
-                </div>
-
-                <div id="voting-status-banner" class="p-4 rounded-xl text-center font-medium text-sm bg-amber-50 text-amber-800 border border-amber-200">
-                    Status: Anda belum menggunakan hak suara. Silakan pilih kandidat di bawah.
-                </div>
-
-                <div class="text-center">
-                    <h3 class="text-xl font-bold text-slate-900">Bilik Suara Pemilihan</h3>
-                    <p class="text-sm text-slate-500">Pilih salah satu pasangan calon di bawah ini.</p>
-                </div>
-
-                <div id="voter-candidates-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-            </div>
-
-            <!-- SUB-VIEW B: ADMIN PANEL PORTAL -->
-            <div id="subview-admin" class="p-8 space-y-6 hidden">
-                <div class="flex space-x-2 border-b border-slate-200 pb-4 flex-wrap gap-2">
-                    <button onclick="switchAdminTab('candidates')" id="admin-tab-candidates" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg text-sm shadow">1. Kelola Kandidat & Tampilan</button>
-                    <button onclick="switchAdminTab('voters')" id="admin-tab-voters" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium rounded-lg text-sm">2. Kelola Pemilih (Reset Status)</button>
-                </div>
-
-                <!-- Admin Page 1: Manage Candidates & Crop / Frame Area -->
-                <div id="admin-page-candidates" class="space-y-6">
-                    <h3 class="text-lg font-bold text-slate-900">Pengaturan Visi, Foto & Area Tampilan Kandidat</h3>
-                    <p class="text-sm text-slate-500">Pilih tata letak/posisi bingkai gambar (object-position) agar foto kandidat tampil proporsional.</p>
-                    <div id="admin-candidates-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-                </div>
-
-                <!-- Admin Page 2: Manage Voters -->
-                <div id="admin-page-voters" class="space-y-6 hidden">
-                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-900">Database Akun Pemilih & Status Voting</h3>
-                            <p class="text-sm text-slate-500">Cari NIS untuk mereset status jika terjadi kesalahan teknis.</p>
+            <!-- Content Area -->
+            <main class="flex-1 p-6 bg-slate-50 overflow-y-auto">
+                
+                <!-- SUBVIEW: VOTER PORTAL -->
+                <div id="subview-voter" class="space-y-6">
+                    <!-- Progress Tracker Bar -->
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs"><i class="fa-solid fa-list-check"></i></div>
+                            <div>
+                                <h3 class="text-xs font-bold text-slate-900">Portal Pemungutan Suara</h3>
+                                <p class="text-[11px] text-slate-500">Pilih salah satu kandidat di bawah dengan bijak</p>
+                            </div>
                         </div>
-                        <input type="text" id="voter-search-input" oninput="filterVoterTable()" placeholder="Cari berdasarkan NIS / Nama..." class="px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64">
+                        <div class="hidden sm:flex items-center space-x-2 text-xs font-medium text-slate-500">
+                            <span class="w-3 h-3 rounded-full bg-blue-600 inline-block" id="step-1-dot"></span><span>Login</span>
+                            <span class="w-1 h-0.5 bg-slate-300"></span>
+                            <span class="w-3 h-3 rounded-full bg-blue-600 inline-block" id="step-2-dot"></span><span>Pilih</span>
+                            <span class="w-1 h-0.5 bg-slate-300"></span>
+                            <span class="w-3 h-3 rounded-full bg-slate-300 inline-block" id="step-3-dot"></span><span>Konfirmasi</span>
+                        </div>
                     </div>
-                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                    <th class="p-4">NIS / ID</th>
-                                    <th class="p-4">Nama Lengkap</th>
-                                    <th class="p-4">Peran</th>
-                                    <th class="p-4">Status</th>
-                                    <th class="p-4">Pilihan</th>
-                                    <th class="p-4 text-center">Aksi (Reset)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-voter-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
-                        </table>
+
+                    <div id="voting-status-banner" class="p-4 rounded-xl text-center font-medium text-sm"></div>
+
+                    <!-- Candidates Grid -->
+                    <div id="voter-candidates-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Rendered via JS -->
                     </div>
                 </div>
-            </div>
 
+                <!-- SUBVIEW: ADMIN DASHBOARD -->
+                <div id="subview-admin" class="hidden space-y-6">
+                    <!-- Admin Navigation Tabs -->
+                    <div class="flex space-x-2 border-b border-slate-200 pb-3">
+                        <button onclick="switchAdminTab('candidates')" id="admin-tab-candidates" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg text-sm shadow">Kelola Kandidat</button>
+                        <button onclick="switchAdminTab('voters')" id="admin-tab-voters" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium rounded-lg text-sm">Kelola Pemilih & Status</button>
+                    </div>
+
+                    <!-- Admin Page: Candidates -->
+                    <div id="admin-page-candidates" class="space-y-4">
+                        <h3 class="font-bold text-slate-900 text-base">Pengaturan & Crop Foto Kandidat</h3>
+                        <div id="admin-candidates-list" class="grid grid-cols-1 gap-6">
+                            <!-- Rendered via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Admin Page: Voters -->
+                    <div id="admin-page-voters" class="hidden space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <h3 class="font-bold text-slate-900 text-base">Daftar Pemilih & Status Suara</h3>
+                            <input type="text" id="voter-search-input" onkeyup="filterVoterTable()" placeholder="Cari NIS atau Nama..." class="w-full sm:w-64 p-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-600">
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse text-sm">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-slate-600 text-xs border-b border-slate-200">
+                                            <th class="p-4 font-semibold">NIS</th>
+                                            <th class="p-4 font-semibold">Nama Lengkap</th>
+                                            <th class="p-4 font-semibold">Peran</th>
+                                            <th class="p-4 font-semibold">Status</th>
+                                            <th class="p-4 font-semibold">Pilihan</th>
+                                            <th class="p-4 font-semibold text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-voter-table-body" class="divide-y divide-slate-100">
+                                        <!-- Rendered via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+    </div>
+
+    <!-- CUSTOM CONFIRMATION MODAL -->
+    <div id="custom-confirm-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4 text-center">
+            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl mx-auto flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-slate-900" id="modal-candidate-title">Konfirmasi Pilihan</h3>
+                <p class="text-xs text-slate-500 mt-1" id="modal-candidate-names"></p>
+            </div>
+            <p class="text-xs bg-slate-50 p-3 rounded-xl border border-slate-200 text-slate-600">
+                Anda memilih <strong id="modal-candidate-bold-name" class="text-slate-900"></strong>. Pilihan ini bersifat final dan tidak dapat diubah kembali setelah disimpan.
+            </p>
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <button onclick="closeConfirmModal()" class="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">Batal</button>
+                <button onclick="executeFinalVote()" class="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition">Ya, Kirim Suara</button>
+            </div>
         </div>
     </div>
 
-    <!-- FOOTER COPYRIGHT -->
-    <footer class="mt-8 text-center text-xs text-slate-400">
-        &copy; 2026 Muhamad Rafa Fathur Rohman
-    </footer>
-
-    <!-- MODAL KONFIRMASI -->
-    <div id="custom-confirm-modal" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white text-slate-900 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200">
-            <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
-                <span class="text-xs tracking-wider uppercase font-semibold">Konfirmasi Pilihan Suara</span>
-                <button onclick="closeConfirmModal()" class="text-white/80 hover:text-white font-bold text-lg">&times;</button>
+    <!-- CUSTOM NOTIFICATION BANNER MODAL (No Browser Alerts) -->
+    <div id="custom-alert-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 text-center">
+            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-xl">
+                <i class="fa-solid fa-circle-info"></i>
             </div>
-            <div class="p-6 space-y-4">
-                <div class="text-center">
-                    <h4 id="modal-candidate-title" class="text-xl font-bold text-slate-900">Paslon 01</h4>
-                    <p id="modal-candidate-names" class="text-sm text-indigo-600 font-medium">-</p>
-                </div>
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-sm text-slate-600">
-                    Anda akan memilih <strong id="modal-candidate-bold-name" class="text-slate-900">Kandidat</strong>. Pilihan bersifat permanen dan akan langsung keluar setelah dikonfirmasi.
-                </div>
-                <div class="flex space-x-3 pt-2">
-                    <button onclick="closeConfirmModal()" class="w-1/2 py-2.5 border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium rounded-xl transition">Kembali</button>
-                    <button onclick="executeFinalVote()" class="w-1/2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow transition">Konfirmasi Pilihan</button>
-                </div>
+            <div>
+                <h3 class="text-base font-bold text-slate-900" id="alert-title">Informasi</h3>
+                <p class="text-xs text-slate-600 mt-1 leading-relaxed" id="alert-message"></p>
             </div>
+            <button onclick="closeCustomAlert()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition">
+                Mengerti
+            </button>
         </div>
     </div>
 
-    <!-- MODAL ALERT -->
-    <div id="custom-alert-modal" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white text-slate-900 rounded-2xl max-w-sm w-full shadow-2xl p-6 text-center space-y-4 border border-slate-200">
-            <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto font-bold text-xl">i</div>
-            <h4 id="alert-title" class="text-lg font-bold text-slate-900">Informasi</h4>
-            <p id="alert-message" class="text-sm text-slate-600">Pesan.</p>
-            <button onclick="closeCustomAlert()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition shadow">Mengerti</button>
-        </div>
-    </div>
+    <!-- Firebase Initialization -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "pemilihan-ketua-osis-app",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.FS = { doc, getDoc, setDoc, updateDoc, collection, getDocs };
+    </script>
 
     <script src="script.js"></script>
 </body>
