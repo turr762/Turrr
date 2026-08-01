@@ -1,5 +1,7 @@
 let currentUser = null;
 let isSubmitting = false;
+let cropper = null;
+let activeCandidateId = null;
 
 window.addEventListener('DOMContentLoaded', async () => {
     const savedUserId = localStorage.getItem("current_user_id");
@@ -190,7 +192,7 @@ async function executeFinalVote() {
     }
 }
 
-// 5. Admin Panel & Candidate Management (Vision & Mission updates only)
+// 5. Admin Panel & Candidate Management (Photo URL, Crop & Vision Updates)
 function switchAdminTab(tabName) {
     const candBtn = document.getElementById('admin-tab-candidates');
     const voterBtn = document.getElementById('admin-tab-voters');
@@ -227,11 +229,20 @@ async function loadAdminCandidates() {
                     
                     <div class="space-y-3">
                         <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">URL Foto (Drive / ImgBB)</label>
+                            <div class="flex space-x-2">
+                                <input type="text" id="photoUrl-${id}" value="${c.photoUrl || ''}" placeholder="https://..." class="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500">
+                                <button type="button" onclick="openCropper('${id}')" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-xl transition whitespace-nowrap">
+                                    Crop Foto
+                                </button>
+                            </div>
+                        </div>
+                        <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Ubah Visi & Misi</label>
                             <textarea id="vision-${id}" rows="3" class="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500">${c.vision || ''}</textarea>
                         </div>
-                        <button onclick="saveCandidateChanges('${id}')" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition shadow">
-                            Simpan Perubahan Visi & Misi
+                        <button type="button" onclick="saveCandidateChanges('${id}')" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition shadow">
+                            Simpan Perubahan Kandidat
                         </button>
                     </div>
                 </div>
@@ -243,15 +254,69 @@ async function loadAdminCandidates() {
     }
 }
 
+// Open the Cropper Modal
+function openCropper(id) {
+    activeCandidateId = id;
+    const url = document.getElementById(`photoUrl-${id}`).value.trim();
+    
+    if (!url) {
+        showAlert("Perhatian", "Masukkan URL foto terlebih dahulu sebelum melakukan crop!");
+        return;
+    }
+
+    const imageElement = document.getElementById('imageToCrop');
+    imageElement.src = url;
+    
+    document.getElementById('cropModal').classList.remove('hidden');
+
+    if (cropper) {
+        cropper.destroy();
+    }
+    
+    cropper = new Cropper(imageElement, {
+        aspectRatio: 1 / 1,
+        viewMode: 1,
+        autoCropArea: 1,
+    });
+}
+
+// Close the Cropper Modal
+function closeCropModal() {
+    document.getElementById('cropModal').classList.add('hidden');
+    if (cropper) {
+        cropper.destroy();
+        cropper = null;
+    }
+}
+
+// Process Cropped Image and Save Automatically
+async function saveCroppedImage() {
+    if (!cropper) return;
+
+    const canvas = cropper.getCroppedCanvas({
+        width: 600,
+        height: 600,
+    });
+
+    const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+    document.getElementById(`photoUrl-${activeCandidateId}`).value = croppedDataUrl;
+    closeCropModal();
+    
+    await saveCandidateChanges(activeCandidateId);
+}
+
 async function saveCandidateChanges(id) {
+    const newPhotoUrl = document.getElementById(`photoUrl-${id}`).value.trim();
     const newVision = document.getElementById(`vision-${id}`).value;
 
     try {
         const candidateRef = window.FS.doc(window.db, "candidates", id);
         await window.FS.updateDoc(candidateRef, {
+            photoUrl: newPhotoUrl,
             vision: newVision
         });
-        showAlert("Berhasil", `Visi & Misi Paslon ${id} berhasil diperbarui!`);
+        showAlert("Berhasil", `Data Paslon ${id} berhasil diperbarui!`);
         loadAdminCandidates();
     } catch (e) {
         console.error(e);
