@@ -1,9 +1,7 @@
 let currentUser = null;
-let isSubmitting = false; // Safeguard against rapid double-clicks / lag spam
+let isSubmitting = false;
 
-// Initialize app when window loads
 window.addEventListener('DOMContentLoaded', async () => {
-    // Check if user was previously logged in via localStorage session persistence
     const savedUserId = localStorage.getItem("current_user_id");
     if (savedUserId) {
         try {
@@ -19,10 +17,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// 1. Handle Login Authentication
+// 1. Handle Login Authentication (Case-Insensitive NIS Lookup)
 async function handleLogin(event) {
     event.preventDefault();
-    const nis = document.getElementById('username').value.trim();
+    const rawInput = document.getElementById('username').value.trim();
+    const nis = rawInput.toLowerCase(); // Case-insensitive matching standard
     const pass = document.getElementById('password').value.trim();
 
     try {
@@ -36,7 +35,7 @@ async function handleLogin(event) {
 
         const userData = userSnap.data();
         if (userData.password !== pass) {
-            showAlert("Login Gagal", "Password yang Anda masukkan salah!");
+            showAlert("Login Gagal", "Kata sandi yang Anda masukkan salah!");
             return;
         }
 
@@ -50,7 +49,6 @@ async function handleLogin(event) {
     }
 }
 
-// Handle Logout
 function handleLogout() {
     currentUser = null;
     localStorage.removeItem("current_user_id");
@@ -60,7 +58,6 @@ function handleLogout() {
     document.getElementById('password').value = '';
 }
 
-// 2. Dashboard Router (Voter vs Admin)
 async function loadAppDashboard() {
     document.getElementById('view-login').classList.add('hidden');
     document.getElementById('view-app-container').classList.remove('hidden');
@@ -82,8 +79,7 @@ async function loadAppDashboard() {
 async function renderVoterPortal() {
     const banner = document.getElementById('voting-status-banner');
     const grid = document.getElementById('voter-candidates-grid');
-    
-    // Update step dots
+
     document.getElementById('step-1-dot').className = "w-3 h-3 rounded-full bg-blue-600";
     document.getElementById('step-2-dot').className = "w-3 h-3 rounded-full bg-blue-600";
 
@@ -97,22 +93,22 @@ async function renderVoterPortal() {
         banner.textContent = "Status: Anda belum menggunakan hak suara. Silakan pilih kandidat di bawah.";
     }
 
-    // Fetch candidates from Firestore
     try {
         const querySnapshot = await window.FS.getDocs(window.FS.collection(window.db, "candidates"));
         let html = "";
         querySnapshot.forEach((docSnap) => {
             const c = docSnap.data();
             const cId = docSnap.id;
+            const objectPosition = c.objectPosition || 'center';
             html += `
                 <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col justify-between shadow-sm">
                     <div>
-                        <div class="h-40 bg-slate-200 rounded-xl mb-4 overflow-hidden flex items-center justify-center text-slate-400 font-semibold">
-                            ${c.photoUrl ? `<img src="${c.photoUrl}" class="w-full h-full object-cover">` : `Paslon ${cId}`}
+                        <div class="h-48 bg-slate-200 rounded-xl mb-4 overflow-hidden flex items-center justify-center text-slate-400 font-semibold">
+                            ${c.photoUrl ? `<img src="${c.photoUrl}" style="object-position: ${objectPosition};" class="w-full h-full object-cover">` : `Paslon ${cId}`}
                         </div>
                         <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Nomor Urut ${cId}</span>
                         <h4 class="text-lg font-bold text-slate-900 mt-1">${c.names}</h4>
-                        <p class="text-xs text-slate-600 mt-2 line-clamp-3"><strong>Visi:</strong> ${c.vision || '-'}</p>
+                        <p class="text-xs text-slate-600 mt-2 line-clamp-4"><strong>Visi & Misi:</strong> ${c.vision || '-'}</p>
                     </div>
                     <button onclick="${currentUser.hasVoted ? `showAlert('Info', 'Anda sudah memilih!')` : `openConfirmModal('${cId}', '${c.names}')`}" 
                         class="mt-5 w-full py-2.5 ${currentUser.hasVoted ? 'bg-slate-300 cursor-not-allowed text-slate-600' : 'bg-blue-600 hover:bg-blue-700 text-white shadow'} font-semibold rounded-xl transition">
@@ -142,7 +138,7 @@ function closeConfirmModal() {
     document.getElementById('custom-confirm-modal').classList.add('hidden');
 }
 
-// 4. Execute Final Vote with Double-Submission Protection
+// 4. Execute Final Vote with Immediate Redirect Back to Login Screen
 async function executeFinalVote() {
     if (isSubmitting) return; 
     isSubmitting = true;
@@ -156,7 +152,7 @@ async function executeFinalVote() {
     try {
         const userRef = window.FS.doc(window.db, "users", currentUser.id);
         const freshUserSnap = await window.FS.getDoc(userRef);
-        
+
         if (freshUserSnap.data().hasVoted) {
             showAlert("Akses Ditolak", "Anda sudah menggunakan hak suara sebelumnya!");
             closeConfirmModal();
@@ -164,37 +160,34 @@ async function executeFinalVote() {
             return;
         }
 
-        // Update user state in Firestore
         await window.FS.updateDoc(userRef, {
             hasVoted: true,
             votedCandidate: selectedCandidateId
         });
 
-        // Increment candidate vote count
         const candidateRef = window.FS.doc(window.db, "candidates", selectedCandidateId);
         const candidateSnap = await window.FS.getDoc(candidateRef);
         const currentVotes = candidateSnap.exists() ? (candidateSnap.data().votes || 0) : 0;
-        
+
         await window.FS.updateDoc(candidateRef, {
             votes: currentVotes + 1
         });
 
-        currentUser.hasVoted = true;
-        currentUser.votedCandidate = selectedCandidateId;
-
         closeConfirmModal();
-        showAlert("Berhasil!", "Suara Anda telah berhasil direkam ke cloud.");
-        loadAppDashboard();
+        
+        // Immediate logout & redirect to login page right after successful vote
+        localStorage.removeItem("current_user_id");
+        alert("Suara Anda berhasil direkam! Terima kasih telah berpartisipasi.");
+        window.location.href = "index.html";
 
     } catch (error) {
         console.error("Voting error:", error);
         showAlert("Gagal", "Gagal menyimpan suara. Periksa koneksi internet Anda.");
-    } finally {
         isSubmitting = false;
     }
 }
 
-// 5. Admin Panel Tabs & Features
+// 5. Admin Panel & Candidate Management Features
 function switchAdminTab(tabName) {
     const candBtn = document.getElementById('admin-tab-candidates');
     const voterBtn = document.getElementById('admin-tab-voters');
@@ -220,16 +213,64 @@ async function loadAdminCandidates() {
         let html = "";
         querySnapshot.forEach((docSnap) => {
             const c = docSnap.data();
+            const id = docSnap.id;
+            const currentPosition = c.objectPosition || 'center';
             html += `
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
-                    <h4 class="font-bold text-slate-900">Paslon ${docSnap.id}: ${c.names}</h4>
-                    <p class="text-xs text-slate-500">Total Suara Masuk: <strong class="text-indigo-600">${c.votes || 0}</strong></p>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4 shadow-sm">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-slate-900">Paslon ${id}: ${c.names}</h4>
+                        <span class="text-xs font-semibold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full">Suara: ${c.votes || 0}</span>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Ubah Visi & Misi</label>
+                            <textarea id="vision-${id}" rows="2" class="w-full p-2 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-indigo-500">${c.vision || ''}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">URL Foto Kandidat</label>
+                            <input type="text" id="photourl-${id}" value="${c.photoUrl || ''}" placeholder="https://..." class="w-full p-2 border border-slate-300 rounded-lg text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Atur Posisi Bingkai Foto (Crop Area)</label>
+                            <select id="pos-${id}" class="w-full p-2 border border-slate-300 rounded-lg text-xs bg-white">
+                                <option value="center" ${currentPosition === 'center' ? 'selected' : ''}>Tengah (Center)</option>
+                                <option value="top" ${currentPosition === 'top' ? 'selected' : ''}>Atas (Top)</option>
+                                <option value="bottom" ${currentPosition === 'bottom' ? 'selected' : ''}>Bawah (Bottom)</option>
+                                <option value="left" ${currentPosition === 'left' ? 'selected' : ''}>Kiri (Left)</option>
+                                <option value="right" ${currentPosition === 'right' ? 'selected' : ''}>Kanan (Right)</option>
+                            </select>
+                        </div>
+                        <button onclick="saveCandidateChanges('${id}')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg transition shadow">
+                            Simpan Perubahan Kandidat
+                        </button>
+                    </div>
                 </div>
             `;
         });
         document.getElementById('admin-candidates-list').innerHTML = html;
     } catch (e) {
         console.error(e);
+    }
+}
+
+async function saveCandidateChanges(id) {
+    const newVision = document.getElementById(`vision-${id}`).value;
+    const newPhotoUrl = document.getElementById(`photourl-${id}`).value;
+    const newPosition = document.getElementById(`pos-${id}`).value;
+
+    try {
+        const candidateRef = window.FS.doc(window.db, "candidates", id);
+        await window.FS.updateDoc(candidateRef, {
+            vision: newVision,
+            photoUrl: newPhotoUrl,
+            objectPosition: newPosition
+        });
+        showAlert("Berhasil", `Data Paslon ${id} berhasil diperbarui!`);
+        loadAdminCandidates();
+    } catch (e) {
+        console.error(e);
+        showAlert("Gagal", "Gagal menyimpan pengaturan kandidat.");
     }
 }
 
@@ -289,7 +330,6 @@ async function resetVoterStatus(nis) {
     }
 }
 
-// Global Custom Alerts
 function showAlert(title, message) {
     document.getElementById('alert-title').textContent = title;
     document.getElementById('alert-message').textContent = message;
