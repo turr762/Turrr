@@ -99,10 +99,10 @@
                     <button onclick="switchAdminTab('voters')" id="admin-tab-voters" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium rounded-lg text-sm">2. Kelola Pemilih (Reset Status)</button>
                 </div>
 
-                <!-- Admin Page 1: Manage Candidates (Photo URL, Crop Button & Vision/Mission) -->
+                <!-- Admin Page 1: Manage Candidates -->
                 <div id="admin-page-candidates" class="space-y-6">
-                    <h3 class="text-lg font-bold text-slate-900">Pengaturan Foto & Visi Misi Kandidat</h3>
-                    <p class="text-sm text-slate-500">Masukkan link gambar (Drive/ImgBB) atau gunakan alat crop untuk menyesuaikan foto paslon.</p>
+                    <h3 class="text-lg font-bold text-slate-900">Pengaturan Foto & Visi Kandidat</h3>
+                    <p class="text-sm text-slate-500">Gunakan tombol crop untuk memperbarui foto paslon langsung ke database.</p>
                     <div id="admin-candidates-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
                 </div>
 
@@ -174,7 +174,7 @@
         </div>
     </div>
 
-    <!-- CROPPER MODAL UI -->
+    <!-- CROPPER MODAL UI (Input URL removed, prompts for source image URL) -->
     <div id="cropModal" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white text-slate-900 rounded-2xl max-w-lg w-full shadow-2xl p-6 space-y-4 border border-slate-200">
             <h3 class="font-bold text-slate-900 text-lg">Sesuaikan Potongan Foto Paslon</h3>
