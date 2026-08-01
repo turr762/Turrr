@@ -21,7 +21,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 async function handleLogin(event) {
     event.preventDefault();
     const rawInput = document.getElementById('username').value.trim();
-    const nis = rawInput.toLowerCase(); // Case-insensitive matching standard
+    const nis = rawInput.toLowerCase(); 
     const pass = document.getElementById('password').value.trim();
 
     try {
@@ -175,7 +175,6 @@ async function executeFinalVote() {
 
         closeConfirmModal();
         
-        // Immediate logout & redirect to login page right after successful vote
         localStorage.removeItem("current_user_id");
         alert("Suara Anda berhasil direkam! Terima kasih telah berpartisipasi.");
         window.location.href = "index.html";
@@ -315,18 +314,46 @@ function filterVoterTable() {
     renderVoterTableRows(filtered);
 }
 
+// Reset voter status and safely remove their exact vote from the candidate they chose
 async function resetVoterStatus(nis) {
     try {
         const userRef = window.FS.doc(window.db, "users", nis);
+        const userSnap = await window.FS.getDoc(userRef);
+
+        if (!userSnap.exists()) {
+            showAlert("Gagal", "Data pengguna tidak ditemukan.");
+            return;
+        }
+
+        const userData = userSnap.data();
+        const votedCandidateId = userData.votedCandidate;
+
+        // Reset user voting state
         await window.FS.updateDoc(userRef, {
             hasVoted: false,
             votedCandidate: null
         });
-        showAlert("Berhasil", `Status voting untuk NIS ${nis} telah direset.`);
+
+        // Deduct the vote from the specific candidate they chose
+        if (votedCandidateId) {
+            const candidateRef = window.FS.doc(window.db, "candidates", votedCandidateId);
+            const candidateSnap = await window.FS.getDoc(candidateRef);
+
+            if (candidateSnap.exists()) {
+                const currentVotes = candidateSnap.data().votes || 0;
+                const updatedVotes = Math.max(0, currentVotes - 1);
+
+                await window.FS.updateDoc(candidateRef, {
+                    votes: updatedVotes
+                });
+            }
+        }
+
+        showAlert("Berhasil", `Status pemilih ${nis} berhasil direset dan suara dari kandidat pilihannya telah ditarik.`);
         loadAdminVotersTable();
     } catch (e) {
-        console.error(e);
-        showAlert("Gagal", "Gagal mereset status pemilih.");
+        console.error("Error resetting voter:", e);
+        showAlert("Gagal", "Terjadi kesalahan saat mereset status pemilih.");
     }
 }
 
