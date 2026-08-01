@@ -191,7 +191,7 @@ async function executeFinalVote() {
     }
 }
 
-// 5. Admin Panel & Candidate Management (Only Visi & Cropped Photo)
+// 5. Admin Panel & Candidate Management
 function switchAdminTab(tabName) {
     const candBtn = document.getElementById('admin-tab-candidates');
     const voterBtn = document.getElementById('admin-tab-voters');
@@ -220,7 +220,7 @@ async function loadAdminCandidates() {
             const id = docSnap.id;
 
             html += `
-                <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm" data-photourl="${encodeURIComponent(c.photoUrl || '')}">
                     <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                         <h4 class="font-bold text-slate-900 text-base">Paslon ${id}: ${c.names}</h4>
                         <span class="text-xs font-semibold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full">Total Suara: ${c.votes || 0}</span>
@@ -228,9 +228,9 @@ async function loadAdminCandidates() {
                     
                     <div class="space-y-3">
                         <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
-                            <span class="text-xs font-semibold text-slate-700">Foto Tersimpan di Database</span>
+                            <span class="text-xs font-semibold text-slate-700">Kelola Foto Kandidat</span>
                             <button type="button" onclick="openCropper('${id}')" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-xl transition whitespace-nowrap shadow">
-                                Ubah & Crop Foto Baru
+                                Crop Foto
                             </button>
                         </div>
                         <div>
@@ -250,29 +250,38 @@ async function loadAdminCandidates() {
     }
 }
 
-// Open Cropper Modal by asking for source image link first
-function openCropper(id) {
+// Open Cropper Modal directly using the candidate's existing photo from Firestore
+async function openCropper(id) {
     activeCandidateId = id;
-    const sourceUrl = prompt("Masukkan link gambar asal (Google Drive/ImgBB) untuk di-crop:");
     
-    if (!sourceUrl || !sourceUrl.trim()) {
-        return;
-    }
+    try {
+        const candidateRef = window.FS.doc(window.db, "candidates", id);
+        const candidateSnap = await window.FS.getDoc(candidateRef);
+        
+        if (!candidateSnap.exists() || !candidateSnap.data().photoUrl) {
+            showAlert("Perhatian", "Tidak ada foto tersimpan di database untuk kandidat ini!");
+            return;
+        }
 
-    const imageElement = document.getElementById('imageToCrop');
-    imageElement.src = sourceUrl.trim();
-    
-    document.getElementById('cropModal').classList.remove('hidden');
+        const existingPhotoUrl = candidateSnap.data().photoUrl;
+        const imageElement = document.getElementById('imageToCrop');
+        imageElement.src = existingPhotoUrl;
+        
+        document.getElementById('cropModal').classList.remove('hidden');
 
-    if (cropper) {
-        cropper.destroy();
+        if (cropper) {
+            cropper.destroy();
+        }
+        
+        cropper = new Cropper(imageElement, {
+            aspectRatio: 1 / 1,
+            viewMode: 1,
+            autoCropArea: 1,
+        });
+    } catch (e) {
+        console.error(e);
+        showAlert("Gagal", "Gagal memuat foto dari database.");
     }
-    
-    cropper = new Cropper(imageElement, {
-        aspectRatio: 1 / 1,
-        viewMode: 1,
-        autoCropArea: 1,
-    });
 }
 
 // Close the Cropper Modal
@@ -297,13 +306,12 @@ async function saveCroppedImage() {
 
     closeCropModal();
     
-    // Save directly to Firestore database field photoUrl
     try {
         const candidateRef = window.FS.doc(window.db, "candidates", activeCandidateId);
         await window.FS.updateDoc(candidateRef, {
             photoUrl: croppedDataUrl
         });
-        showAlert("Berhasil", `Foto Paslon ${activeCandidateId} berhasil diperbarui ke database!`);
+        showAlert("Berhasil", `Foto Paslon ${activeCandidateId} berhasil di-crop dan diperbarui ke database!`);
         loadAdminCandidates();
     } catch (e) {
         console.error(e);
