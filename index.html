@@ -93,14 +93,14 @@
             <!-- SUB-VIEW B: ADMIN PANEL PORTAL -->
             <div id="subview-admin" class="p-8 space-y-6 hidden">
                 <div class="flex space-x-2 border-b border-slate-200 pb-4 flex-wrap gap-2">
-                    <button onclick="switchAdminTab('candidates')" id="admin-tab-candidates" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg text-sm shadow">1. Kelola Kandidat & Tampilan</button>
+                    <button onclick="switchAdminTab('candidates')" id="admin-tab-candidates" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg text-sm shadow">1. Kelola Kandidat</button>
                     <button onclick="switchAdminTab('voters')" id="admin-tab-voters" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium rounded-lg text-sm">2. Kelola Pemilih (Reset Status)</button>
                 </div>
 
-                <!-- Admin Page 1: Manage Candidates & Crop / Frame Area -->
+                <!-- Admin Page 1: Manage Candidates (Vision & Mission Only) -->
                 <div id="admin-page-candidates" class="space-y-6">
-                    <h3 class="text-lg font-bold text-slate-900">Pengaturan Visi, Foto & Area Tampilan Kandidat</h3>
-                    <p class="text-sm text-slate-500">Pilih tata letak/posisi bingkai gambar (object-position) agar foto kandidat tampil proporsional.</p>
+                    <h3 class="text-lg font-bold text-slate-900">Pengaturan Visi & Misi Kandidat</h3>
+                    <p class="text-sm text-slate-500">Foto dan data utama dikelola langsung melalui database Firestore.</p>
                     <div id="admin-candidates-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
                 </div>
 
