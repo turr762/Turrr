@@ -3,35 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin - Pemilihan OSIS</title>
+    <title>Halaman Admin - Pemilihan OSIS</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header>
-        <img src="assets/img/logo.png" alt="Logo OSIS">
-        <h1>SMPN 219 JAKARTA</h1>
-    </header>
+    <!-- ========================================== -->
+    <!-- BAGIAN 1: FORM LOGIN ADMIN (Muncul Pertama) -->
+    <!-- ========================================== -->
+    <div id="loginSection">
+        <header>
+            <img src="assets/img/logo.png" alt="Logo OSIS">
+            <h1>SMPN 219 JAKARTA</h1>
+        </header>
 
-    <main class="main-container">
-        <div class="card">
-            <h2>Login Admin</h2>
-            
-            <!-- Form Login Admin -->
-            <form id="formLoginAdmin">
-                <input type="text" id="nisAdmin" placeholder="Masukkan NIS Admin" required class="input-field">
-                <input type="password" id="passAdmin" placeholder="Masukkan Password" required class="input-field">
-                <button type="submit" class="btn">Masuk</button>
-            </form>
+        <main class="main-container">
+            <div class="card">
+                <h2>Login Admin</h2>
+                <form id="formLoginAdmin">
+                    <input type="text" id="nisAdmin" placeholder="Masukkan NIS Admin" required class="input-field">
+                    <input type="password" id="passAdmin" placeholder="Masukkan Password" required class="input-field">
+                    <button type="submit" class="btn">Masuk</button>
+                </form>
+                <a href="index.html" class="link-kembali">Kembali ke Halaman Awal</a>
+            </div>
+        </main>
+        <footer>&copy; 2026 SMPN 219 JAKARTA. All Rights Reserved.</footer>
+    </div>
 
-            <a href="index.html" class="link-kembali">Kembali ke Halaman Awal</a>
+    <!-- ========================================== -->
+    <!-- BAGIAN 2: DASHBOARD ADMIN (Disembunyikan di awal) -->
+    <!-- ========================================== -->
+    <div id="dashboardSection" class="admin-layout" style="display: none;">
+        
+        <!-- Sidebar Menu Gelap -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="assets/img/logo.png" alt="Logo OSIS">
+                <h2>SMPN 219</h2>
+            </div>
+            <nav class="sidebar-menu" id="adminMenu">
+                <a href="#" data-target="menuDashboard" class="active">Dashboard</a>
+                <a href="#" data-target="menuKandidat">1. Kandidat</a>
+                <a href="#" data-target="menuVoter">2. Voter</a>
+                <a href="#" data-target="menuPemilihan">3. Pemilihan</a>
+                <a href="#" data-target="menuHasil">4. Hasil Suara</a>
+                <a href="#" data-target="menuLaporan">5. Laporan</a>
+                <a href="#" id="btnLogoutAdmin" style="margin-top: auto; color: #ff6b6b;">Logout</a>
+            </nav>
+        </aside>
+
+        <!-- Konten Utama -->
+        <div class="main-content">
+            <header class="admin-header">
+                <h1 id="judulHalaman">Dashboard Utama</h1>
+                <span>Panitia OSIS SMPN 219 JAKARTA</span>
+            </header>
+
+            <!-- KONTEN: DASHBOARD UTAMA -->
+            <div id="menuDashboard" class="content-section">
+                <section class="dashboard-stats">
+                    <div class="stat-box">
+                        <h3>Jumlah Akun</h3>
+                        <p id="totalAkun">0</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Jumlah Kandidat</h3>
+                        <p id="totalKandidat">0</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Sudah Voting</h3>
+                        <p id="sudahVoting">0</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Belum Voting</h3>
+                        <p id="belumVoting">0</p>
+                    </div>
+                </section>
+                <section class="table-section">
+                    <h2>Daftar Akun Belum Voting</h2>
+                    <div class="search-bar">
+                        <input type="text" id="searchNISBelumVoting" placeholder="Cari NIS..." class="input-field">
+                    </div>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>NIS</th>
+                                <th>Nama</th>
+                                <th>Kelas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBelumVoting">
+                            <tr><td colspan="4" style="text-align: center;">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+
+            <!-- KONTEN: 1. KANDIDAT -->
+            <div id="menuKandidat" class="content-section" style="display: none;">
+                <section class="table-section" style="padding-top: 30px;">
+                    <h2>Kelola Kandidat</h2>
+                    <p>Fitur tambah, edit, dan hapus kandidat akan ada di sini.</p>
+                </section>
+            </div>
+
+            <!-- KONTEN: 2. VOTER -->
+            <div id="menuVoter" class="content-section" style="display: none;">
+                <section class="table-section" style="padding-top: 30px;">
+                    <h2>Kelola Akun Voter</h2>
+                    <p>Fitur tambah, import excel, nonaktifkan, dan pencarian voter akan ada di sini.</p>
+                </section>
+            </div>
+
+            <!-- KONTEN: 3. PEMILIHAN -->
+            <div id="menuPemilihan" class="content-section" style="display: none;">
+                <section class="table-section" style="padding-top: 30px;">
+                    <h2>Pengaturan Acara Pemilihan</h2>
+                    <p>Fitur penentuan jadwal acara akan ada di sini.</p>
+                </section>
+            </div>
+
+            <!-- KONTEN: 4. HASIL SUARA -->
+            <div id="menuHasil" class="content-section" style="display: none;">
+                <section class="table-section" style="padding-top: 30px;">
+                    <h2>Hasil Suara Pemilihan</h2>
+                    <p>Diagram</p>
+                </section>
+            </div>
+
+            <!-- KONTEN: 5. LAPORAN -->
+            <div id="menuLaporan" class="content-section" style="display: none;">
+                <section class="table-section" style="padding-top: 30px;">
+                    <h2>Export Laporan</h2>
+                    <p>Fitur download laporan ke Excel akan ada di sini.</p>
+                </section>
+            </div>
+
         </div>
-    </main>
+    </div>
 
-    <footer>
-        &copy;SMPN 219 JAKARTA.
-    </footer>
-
-    <script type="module" src="main.js"></script>
+    <!-- Menghubungkan ke file JS khusus Admin -->
+    <script type="module" src="admin.js"></script>
 </body>
 </html>
