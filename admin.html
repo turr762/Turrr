@@ -8,9 +8,7 @@
 </head>
 <body>
 
-    <!-- ========================================== -->
-    <!-- BAGIAN 1: FORM LOGIN ADMIN (Muncul Pertama) -->
-    <!-- ========================================== -->
+    <!-- BAGIAN 1: FORM LOGIN ADMIN -->
     <div id="loginSection">
         <header>
             <img src="assets/img/logo.png" alt="Logo OSIS">
@@ -21,6 +19,7 @@
             <div class="card">
                 <h2>Login Admin</h2>
                 <form id="formLoginAdmin">
+                    <p id="pesanError" style="color: red; font-size: 14px; display: none; margin-bottom: 15px; text-align: left;"></p>
                     <input type="text" id="nisAdmin" placeholder="Masukkan NIS Admin" required class="input-field">
                     <input type="password" id="passAdmin" placeholder="Masukkan Password" required class="input-field">
                     <button type="submit" class="btn">Masuk</button>
@@ -28,15 +27,12 @@
                 <a href="index.html" class="link-kembali">Kembali ke Halaman Awal</a>
             </div>
         </main>
-        <footer>&copy; 2026 SMPN 219 JAKARTA. All Rights Reserved.</footer>
+        <footer>&copy; OSIS SMPN 219 JAKARTA</footer>
     </div>
 
-    <!-- ========================================== -->
-    <!-- BAGIAN 2: DASHBOARD ADMIN (Disembunyikan di awal) -->
-    <!-- ========================================== -->
+    <!-- BAGIAN 2: DASHBOARD ADMIN (SPA) -->
     <div id="dashboardSection" class="admin-layout" style="display: none;">
         
-        <!-- Sidebar Menu Gelap -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <img src="assets/img/logo.png" alt="Logo OSIS">
@@ -53,7 +49,6 @@
             </nav>
         </aside>
 
-        <!-- Konten Utama -->
         <div class="main-content">
             <header class="admin-header">
                 <h1 id="judulHalaman">Dashboard Utama</h1>
@@ -105,7 +100,7 @@
             <div id="menuKandidat" class="content-section" style="display: none;">
                 <section class="table-section" style="padding-top: 30px;">
                     <h2>Kelola Kandidat</h2>
-                    <p>Fitur tambah, edit, dan hapus kandidat akan ada di sini.</p>
+                    <p>Fitur tambah, edit, dan hapus kandidat.</p>
                 </section>
             </div>
 
@@ -113,7 +108,7 @@
             <div id="menuVoter" class="content-section" style="display: none;">
                 <section class="table-section" style="padding-top: 30px;">
                     <h2>Kelola Akun Voter</h2>
-                    <p>Fitur tambah, import excel, nonaktifkan, dan pencarian voter akan ada di sini.</p>
+                    <p>Fitur tambah, import excel, dan nonaktifkan voter.</p>
                 </section>
             </div>
 
@@ -121,7 +116,7 @@
             <div id="menuPemilihan" class="content-section" style="display: none;">
                 <section class="table-section" style="padding-top: 30px;">
                     <h2>Pengaturan Acara Pemilihan</h2>
-                    <p>Fitur penentuan jadwal acara akan ada di sini.</p>
+                    <p>Fitur penentuan jadwal acara.</p>
                 </section>
             </div>
 
@@ -129,7 +124,7 @@
             <div id="menuHasil" class="content-section" style="display: none;">
                 <section class="table-section" style="padding-top: 30px;">
                     <h2>Hasil Suara Pemilihan</h2>
-                    <p>Diagram</p>
+                    <p>Diagram batang hasil suara.</p>
                 </section>
             </div>
 
@@ -137,14 +132,13 @@
             <div id="menuLaporan" class="content-section" style="display: none;">
                 <section class="table-section" style="padding-top: 30px;">
                     <h2>Export Laporan</h2>
-                    <p>Fitur download laporan ke Excel akan ada di sini.</p>
+                    <p>Fitur download laporan ke Excel.</p>
                 </section>
             </div>
 
         </div>
     </div>
 
-    <!-- Menghubungkan ke file JS khusus Admin -->
     <script type="module" src="admin.js"></script>
 </body>
 </html>
