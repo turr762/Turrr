@@ -19,7 +19,7 @@ body {
 
 /* Header & Logo */
 header {
-    background-color: #0056b3; /* Biru */
+    background-color: #0056b3;
     color: white;
     padding: 15px 20px;
     display: flex;
@@ -40,7 +40,7 @@ header h1 {
     font-weight: 600;
 }
 
-/* Container Utama untuk menaruh konten di tengah */
+/* Container Utama */
 .main-container {
     flex: 1;
     display: flex;
@@ -95,17 +95,7 @@ header h1 {
     color: white;
 }
 
-/* Footer Copyright */
-footer {
-    text-align: center;
-    padding: 15px;
-    background-color: white;
-    color: #666;
-    font-size: 14px;
-    border-top: 1px solid #ddd;
-}
-
-/* Styling untuk Input Text & Password */
+/* Input Text & Password */
 .input-field {
     width: 100%;
     padding: 12px;
@@ -120,7 +110,7 @@ footer {
     border-color: #0056b3;
 }
 
-/* Styling untuk Link Kembali */
+/* Link Kembali */
 .link-kembali {
     display: inline-block;
     margin-top: 15px;
@@ -134,21 +124,27 @@ footer {
     text-decoration: underline;
 }
 
-/* =========================================
-   TAMPILAN KHUSUS ADMIN (DASHBOARD)
-   ========================================= */
+/* Footer Copyright */
+footer {
+    text-align: center;
+    padding: 15px;
+    background-color: white;
+    color: #666;
+    font-size: 14px;
+    border-top: 1px solid #ddd;
+}
 
+/* TAMPILAN KHUSUS ADMIN (DASHBOARD) */
 .admin-layout {
     display: flex;
-    flex-direction: row; /* Mengubah arah menjadi ke samping untuk sidebar */
+    flex-direction: row;
     min-height: 100vh;
     background-color: #f4f7f6;
 }
 
-/* Sidebar Gelap */
 .sidebar {
     width: 250px;
-    background-color: #001f3f; /* Biru sangat gelap */
+    background-color: #001f3f;
     color: white;
     display: flex;
     flex-direction: column;
@@ -192,7 +188,6 @@ footer {
     border-left-color: #66b2ff;
 }
 
-/* Konten Utama di Sebelah Kanan Sidebar */
 .main-content {
     flex: 1;
     display: flex;
@@ -214,7 +209,6 @@ footer {
     font-size: 24px;
 }
 
-/* 4 Kotak Statistik */
 .dashboard-stats {
     display: flex;
     gap: 20px;
@@ -243,7 +237,6 @@ footer {
     color: #0056b3;
 }
 
-/* Bagian Tabel */
 .table-section {
     padding: 0 30px 30px 30px;
     flex: 1;
@@ -286,4 +279,69 @@ footer {
     margin-top: auto;
 }
 
-
+/* RESPONSIVE DESIGN (UNTUK HP) */
+@media (max-width: 768px) {
+    .admin-layout {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        padding: 10px;
+    }
+    
+    .sidebar-header img {
+        width: 40px;
+        margin-bottom: 0;
+    }
+    
+    .sidebar-menu {
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding-top: 0;
+    }
+    
+    .sidebar-menu a {
+        flex: 1 1 30%;
+        font-size: 12px;
+        padding: 10px 5px;
+        text-align: center;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+    }
+    
+    .sidebar-menu a:hover, .sidebar-menu a.active {
+        border-left: none;
+        border-bottom-color: #66b2ff;
+    }
+    
+    .admin-header {
+        padding: 15px;
+        flex-direction: column;
+        text-align: center;
+        gap: 5px;
+    }
+    
+    .dashboard-stats {
+        flex-direction: column;
+        padding: 15px;
+    }
+    
+    .table-section {
+        padding: 15px;
+    }
+    
+    .admin-table {
+        font-size: 12px;
+        display: block;
+        overflow-x: auto;
+    }
+}
