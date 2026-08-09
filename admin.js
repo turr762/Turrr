@@ -26,13 +26,11 @@ const btnLogoutAdmin = document.getElementById('btnLogoutAdmin');
 // FUNGSI MUAT DATA DASHBOARD (REAL-TIME)
 // ==========================================
 function muatDataDashboard() {
-    // 1. Ambil Total Kandidat
     const kandidatRef = collection(db, "kandidat");
     onSnapshot(kandidatRef, (snapshot) => {
         document.getElementById('totalKandidat').innerText = snapshot.size;
     });
 
-    // 2. Ambil Data Voter (Total, Sudah Voting, Belum Voting, & Tabel)
     const voterRef = collection(db, "voter");
     onSnapshot(voterRef, (snapshot) => {
         let total = snapshot.size;
@@ -47,7 +45,6 @@ function muatDataDashboard() {
                 sudah++;
             } else {
                 belum++;
-                // Masukkan ke tabel belum voting
                 tableHTML += `
                     <tr>
                         <td>${no++}</td>
@@ -59,12 +56,10 @@ function muatDataDashboard() {
             }
         });
 
-        // Update Kotak Statistik
         document.getElementById('totalAkun').innerText = total;
         document.getElementById('sudahVoting').innerText = sudah;
         document.getElementById('belumVoting').innerText = belum;
 
-        // Update Tabel
         const tbody = document.getElementById('tableBelumVoting');
         if (belum === 0 && total > 0) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Semua pemilih sudah menggunakan hak suaranya!</td></tr>';
@@ -84,9 +79,9 @@ if (searchNIS) {
     searchNIS.addEventListener('input', (e) => {
         const keyword = e.target.value.toLowerCase();
         const barisTabel = document.querySelectorAll('#tableBelumVoting tr');
-        
+
         barisTabel.forEach(baris => {
-            const kolomNIS = baris.cells[1]; // Kolom NIS ada di urutan ke-2 (index 1)
+            const kolomNIS = baris.cells[1];
             if (kolomNIS) {
                 const teksNIS = kolomNIS.innerText.toLowerCase();
                 baris.style.display = teksNIS.includes(keyword) ? '' : 'none';
@@ -101,7 +96,7 @@ if (searchNIS) {
 if (sessionStorage.getItem("adminLoggedIn") === "true") {
     loginSection.style.display = "none";
     dashboardSection.style.display = "flex";
-    muatDataDashboard(); // Panggil data dashboard jika sudah login
+    muatDataDashboard();
 }
 
 // ==========================================
@@ -110,10 +105,10 @@ if (sessionStorage.getItem("adminLoggedIn") === "true") {
 if (formLoginAdmin) {
     formLoginAdmin.addEventListener('submit', async (e) => {
         e.preventDefault(); 
-        
+
         pesanError.style.display = "none";
         pesanError.innerText = "";
-        
+
         const nis = document.getElementById('nisAdmin').value;
         const pass = document.getElementById('passAdmin').value;
 
@@ -132,7 +127,7 @@ if (formLoginAdmin) {
                 loginSection.style.display = "none";
                 dashboardSection.style.display = "flex";
                 formLoginAdmin.reset();
-                muatDataDashboard(); // Panggil data dashboard setelah berhasil login
+                muatDataDashboard();
             } else {
                 pesanError.innerText = "NIS atau Password salah!";
                 pesanError.style.display = "block";
@@ -154,8 +149,6 @@ if (formLoginAdmin) {
 adminMenuLinks.forEach(link => {
     link.addEventListener('click', (e) => {
         e.preventDefault(); 
-        
-        // Jangan jalankan kalau yang diklik adalah tombol Logout
         if (link.id === 'btnLogoutAdmin') return; 
 
         const targetId = link.getAttribute('data-target');
@@ -182,11 +175,10 @@ if (btnLogoutAdmin) {
         sessionStorage.removeItem("adminLoggedIn");
         dashboardSection.style.display = "none";
         loginSection.style.display = "block";
-        
-        // Kembalikan ke menu pertama (Dashboard) agar rapi saat login lagi
         adminMenuLinks[0].click();
     });
 }
+
 // ==========================================
 // KELOLA KANDIDAT (TAMBAH, EDIT, HAPUS)
 // ==========================================
@@ -198,7 +190,6 @@ const judulFormKandidat = document.getElementById('judulFormKandidat');
 const tableKandidat = document.getElementById('tableKandidat');
 const selectPemilihanKandidat = document.getElementById('pemilihanKandidat');
 
-// 1. Munculkan & Sembunyikan Form
 if (btnTambahKandidat && btnBatalKandidat) {
     btnTambahKandidat.addEventListener('click', () => {
         formKandidat.reset();
@@ -212,7 +203,6 @@ if (btnTambahKandidat && btnBatalKandidat) {
     });
 }
 
-// 2. Ambil Pilihan "Pemilihan/Acara" untuk Dropdown
 onSnapshot(collection(db, "pemilihan"), (snapshot) => {
     let opsiHTML = '<option value="">-- Pilih Acara Pemilihan --</option>';
     snapshot.forEach((doc) => {
@@ -221,13 +211,11 @@ onSnapshot(collection(db, "pemilihan"), (snapshot) => {
     if (selectPemilihanKandidat) selectPemilihanKandidat.innerHTML = opsiHTML;
 });
 
-// 3. Tampilkan Data Kandidat di Tabel (Real-time)
 onSnapshot(collection(db, "kandidat"), (snapshot) => {
     let tableHTML = "";
     if (snapshot.empty) {
         tableHTML = '<tr><td colspan="5" style="text-align: center;">Belum ada kandidat terdaftar.</td></tr>';
     } else {
-        // Mengurutkan berdasarkan nomor urut (terkecil ke terbesar)
         const dataKandidat = [];
         snapshot.forEach(doc => dataKandidat.push({ id: doc.id, ...doc.data() }));
         dataKandidat.sort((a, b) => a.no_urut - b.no_urut);
@@ -244,7 +232,8 @@ onSnapshot(collection(db, "kandidat"), (snapshot) => {
                     </td>
                     <td>
                         <button onclick="window.editKandidat('${data.id}', '${data.no_urut}', '${data.nama}', '${data.foto}', '${data.visi}', '${data.misi}', '${data.id_pemilihan}')" class="btn btn-outline" style="padding: 5px 10px; font-size: 12px; margin-bottom: 5px; width: 100%;">Edit</button>
-                        <button onclick="window.hapusKandidat('${data.id}', '${data.nama}')" class="btn" style="background-color: #dc3545; padding: 5px 10px; font-size: 12px; margin-bottom: 0; width: 100%;">Hapus</button>
+                        <!-- PERBAIKAN: Fungsi hapus sudah menggunakan parameter 'this' -->
+                        <button onclick="window.hapusKandidat(this, '${data.id}')" class="btn" style="background-color: #dc3545; padding: 5px 10px; font-size: 12px; margin-bottom: 0; width: 100%;">Hapus</button>
                     </td>
                 </tr>
             `;
@@ -253,11 +242,10 @@ onSnapshot(collection(db, "kandidat"), (snapshot) => {
     if (tableKandidat) tableKandidat.innerHTML = tableHTML;
 });
 
-// 4. Proses Simpan (Tambah / Edit)
 if (formKandidat) {
     formKandidat.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const btnSimpan = document.getElementById('btnSimpanKandidat');
         btnSimpan.innerText = "Menyimpan...";
         btnSimpan.disabled = true;
@@ -270,15 +258,13 @@ if (formKandidat) {
             visi: document.getElementById('visiKandidat').value,
             misi: document.getElementById('misiKandidat').value,
             id_pemilihan: document.getElementById('pemilihanKandidat').value,
-            jumlah_suara: 0 // Default awal
+            jumlah_suara: 0 
         };
 
         try {
             if (idEdit === "") {
-                // Mode Tambah Baru
                 await addDoc(collection(db, "kandidat"), dataBaru);
             } else {
-                // Mode Edit (jumlah suara tidak diubah saat edit profil)
                 delete dataBaru.jumlah_suara; 
                 const kandidatRef = doc(db, "kandidat", idEdit);
                 await updateDoc(kandidatRef, dataBaru);
@@ -295,7 +281,6 @@ if (formKandidat) {
     });
 }
 
-// 5. Fungsi Global untuk Tombol Edit & Hapus (Dipanggil dari HTML HTML)
 window.editKandidat = (id, no_urut, nama, foto, visi, misi, id_pemilihan) => {
     judulFormKandidat.innerText = "Edit Data Kandidat";
     document.getElementById('idKandidatEdit').value = id;
@@ -305,25 +290,13 @@ window.editKandidat = (id, no_urut, nama, foto, visi, misi, id_pemilihan) => {
     document.getElementById('visiKandidat').value = visi;
     document.getElementById('misiKandidat').value = misi;
     document.getElementById('pemilihanKandidat').value = id_pemilihan;
-    
+
     formKandidatContainer.style.display = "block";
     formKandidatContainer.scrollIntoView({ behavior: 'smooth' });
 };
 
-window.hapusKandidat = async (id, nama) => {
-    const konfirmasi = confirm(`Yakin ingin menghapus kandidat ${nama}? Seluruh suaranya akan ikut terhapus.`);
-    if (konfirmasi) {
-        try {
-            await deleteDoc(doc(db, "kandidat", id));
-            // Catatan: Logika pengurangan/penghapusan data di riwayat_suara bisa ditambahkan nanti di sini jika dibutuhkan.
-        } catch (error) {
-            console.error("Error hapus kandidat: ", error);
-            alert("Gagal menghapus data!");
-        }
-    }
-};
 // ==========================================
-// PENGATURAN ACARA PEMILIHAN (TANPA ALERT/CONFIRM)
+// PENGATURAN ACARA PEMILIHAN 
 // ==========================================
 const btnTambahPemilihan = document.getElementById('btnTambahPemilihan');
 const formPemilihanContainer = document.getElementById('formPemilihanContainer');
@@ -333,7 +306,6 @@ const judulFormPemilihan = document.getElementById('judulFormPemilihan');
 const tablePemilihan = document.getElementById('tablePemilihan');
 const pesanErrorPemilihan = document.getElementById('pesanErrorPemilihan');
 
-// 1. Munculkan & Sembunyikan Form Pemilihan
 if (btnTambahPemilihan && btnBatalPemilihan) {
     btnTambahPemilihan.addEventListener('click', () => {
         formPemilihan.reset();
@@ -348,7 +320,6 @@ if (btnTambahPemilihan && btnBatalPemilihan) {
     });
 }
 
-// 2. Tampilkan Data Acara (Dilengkapi Indikator Status Waktu)
 onSnapshot(collection(db, "pemilihan"), (snapshot) => {
     let tableHTML = "";
     if (snapshot.empty) {
@@ -360,22 +331,20 @@ onSnapshot(collection(db, "pemilihan"), (snapshot) => {
             const data = doc.data();
             const waktuMulai = new Date(data.tanggal_mulai);
             const waktuSelesai = new Date(data.tanggal_selesai);
-            
-            // Penentuan Status Otomatis berdasarkan Jam & Tanggal
+
             let status = "";
             let warnaStatus = "";
             if (waktuSekarang < waktuMulai) {
                 status = "Belum Mulai";
-                warnaStatus = "#f0ad4e"; // Kuning
+                warnaStatus = "#f0ad4e";
             } else if (waktuSekarang >= waktuMulai && waktuSekarang <= waktuSelesai) {
                 status = "Berlangsung";
-                warnaStatus = "#28a745"; // Hijau
+                warnaStatus = "#28a745";
             } else {
                 status = "Selesai";
-                warnaStatus = "#dc3545"; // Merah
+                warnaStatus = "#dc3545";
             }
 
-            // Format tampilan supaya rapi (Contoh: 15/08/2026, 08:00)
             const formatMulai = waktuMulai.toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
             const formatSelesai = waktuSelesai.toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
 
@@ -396,11 +365,10 @@ onSnapshot(collection(db, "pemilihan"), (snapshot) => {
     if (tablePemilihan) tablePemilihan.innerHTML = tableHTML;
 });
 
-// 3. Proses Simpan Acara
 if (formPemilihan) {
     formPemilihan.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         pesanErrorPemilihan.style.display = "none";
         const btnSimpan = document.getElementById('btnSimpanPemilihan');
         btnSimpan.innerText = "Menyimpan...";
@@ -433,20 +401,21 @@ if (formPemilihan) {
     });
 }
 
-// 4. Fungsi Global Edit & Hapus Pemilihan
 window.editPemilihan = (id, judul, mulai, selesai) => {
     judulFormPemilihan.innerText = "Edit Acara Pemilihan";
     document.getElementById('idPemilihanEdit').value = id;
     document.getElementById('judulPemilihan').value = judul;
     document.getElementById('waktuMulaiPemilihan').value = mulai;
     document.getElementById('waktuSelesaiPemilihan').value = selesai;
-    
+
     formPemilihanContainer.style.display = "block";
     formPemilihanContainer.scrollIntoView({ behavior: 'smooth' });
 };
 
+// ==========================================
+// FUNGSI GLOBAL HAPUS (TANPA ALERT)
+// ==========================================
 window.hapusPemilihan = async (btn, id) => {
-    // Tombol diubah teksnya menjadi "Menghapus..." secara langsung tanpa alert/confirm
     btn.innerText = "Menghapus...";
     btn.disabled = true;
     try {
@@ -458,7 +427,6 @@ window.hapusPemilihan = async (btn, id) => {
     }
 };
 
-// 5. Update (Revisi) Fungsi Hapus Kandidat Tanpa Confirm()
 window.hapusKandidat = async (btn, id) => {
     btn.innerText = "Menghapus...";
     btn.disabled = true;
