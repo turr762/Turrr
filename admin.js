@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB1Ab-K6ehYQZbjX-QxJQiodqSajGPFdmE",
@@ -187,3 +187,138 @@ if (btnLogoutAdmin) {
         adminMenuLinks[0].click();
     });
 }
+// ==========================================
+// KELOLA KANDIDAT (TAMBAH, EDIT, HAPUS)
+// ==========================================
+const btnTambahKandidat = document.getElementById('btnTambahKandidat');
+const formKandidatContainer = document.getElementById('formKandidatContainer');
+const btnBatalKandidat = document.getElementById('btnBatalKandidat');
+const formKandidat = document.getElementById('formKandidat');
+const judulFormKandidat = document.getElementById('judulFormKandidat');
+const tableKandidat = document.getElementById('tableKandidat');
+const selectPemilihanKandidat = document.getElementById('pemilihanKandidat');
+
+// 1. Munculkan & Sembunyikan Form
+if (btnTambahKandidat && btnBatalKandidat) {
+    btnTambahKandidat.addEventListener('click', () => {
+        formKandidat.reset();
+        document.getElementById('idKandidatEdit').value = "";
+        judulFormKandidat.innerText = "Tambah Kandidat Baru";
+        formKandidatContainer.style.display = "block";
+    });
+
+    btnBatalKandidat.addEventListener('click', () => {
+        formKandidatContainer.style.display = "none";
+    });
+}
+
+// 2. Ambil Pilihan "Pemilihan/Acara" untuk Dropdown
+onSnapshot(collection(db, "pemilihan"), (snapshot) => {
+    let opsiHTML = '<option value="">-- Pilih Acara Pemilihan --</option>';
+    snapshot.forEach((doc) => {
+        opsiHTML += `<option value="${doc.id}">${doc.data().judul}</option>`;
+    });
+    if (selectPemilihanKandidat) selectPemilihanKandidat.innerHTML = opsiHTML;
+});
+
+// 3. Tampilkan Data Kandidat di Tabel (Real-time)
+onSnapshot(collection(db, "kandidat"), (snapshot) => {
+    let tableHTML = "";
+    if (snapshot.empty) {
+        tableHTML = '<tr><td colspan="5" style="text-align: center;">Belum ada kandidat terdaftar.</td></tr>';
+    } else {
+        // Mengurutkan berdasarkan nomor urut (terkecil ke terbesar)
+        const dataKandidat = [];
+        snapshot.forEach(doc => dataKandidat.push({ id: doc.id, ...doc.data() }));
+        dataKandidat.sort((a, b) => a.no_urut - b.no_urut);
+
+        dataKandidat.forEach(data => {
+            tableHTML += `
+                <tr>
+                    <td style="font-weight: bold; font-size: 18px; text-align: center;">${data.no_urut}</td>
+                    <td><img src="${data.foto}" alt="Foto ${data.nama}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;"></td>
+                    <td style="font-weight: bold;">${data.nama}</td>
+                    <td style="font-size: 12px;">
+                        <strong>Visi:</strong> ${data.visi.substring(0, 30)}... <br>
+                        <strong>Misi:</strong> ${data.misi.substring(0, 30)}...
+                    </td>
+                    <td>
+                        <button onclick="window.editKandidat('${data.id}', '${data.no_urut}', '${data.nama}', '${data.foto}', '${data.visi}', '${data.misi}', '${data.id_pemilihan}')" class="btn btn-outline" style="padding: 5px 10px; font-size: 12px; margin-bottom: 5px; width: 100%;">Edit</button>
+                        <button onclick="window.hapusKandidat('${data.id}', '${data.nama}')" class="btn" style="background-color: #dc3545; padding: 5px 10px; font-size: 12px; margin-bottom: 0; width: 100%;">Hapus</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+    if (tableKandidat) tableKandidat.innerHTML = tableHTML;
+});
+
+// 4. Proses Simpan (Tambah / Edit)
+if (formKandidat) {
+    formKandidat.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const btnSimpan = document.getElementById('btnSimpanKandidat');
+        btnSimpan.innerText = "Menyimpan...";
+        btnSimpan.disabled = true;
+
+        const idEdit = document.getElementById('idKandidatEdit').value;
+        const dataBaru = {
+            no_urut: parseInt(document.getElementById('noUrutKandidat').value),
+            nama: document.getElementById('namaKandidat').value,
+            foto: document.getElementById('fotoKandidat').value,
+            visi: document.getElementById('visiKandidat').value,
+            misi: document.getElementById('misiKandidat').value,
+            id_pemilihan: document.getElementById('pemilihanKandidat').value,
+            jumlah_suara: 0 // Default awal
+        };
+
+        try {
+            if (idEdit === "") {
+                // Mode Tambah Baru
+                await addDoc(collection(db, "kandidat"), dataBaru);
+            } else {
+                // Mode Edit (jumlah suara tidak diubah saat edit profil)
+                delete dataBaru.jumlah_suara; 
+                const kandidatRef = doc(db, "kandidat", idEdit);
+                await updateDoc(kandidatRef, dataBaru);
+            }
+            formKandidat.reset();
+            formKandidatContainer.style.display = "none";
+        } catch (error) {
+            console.error("Error simpan kandidat: ", error);
+            alert("Gagal menyimpan data kandidat!");
+        } finally {
+            btnSimpan.innerText = "Simpan";
+            btnSimpan.disabled = false;
+        }
+    });
+}
+
+// 5. Fungsi Global untuk Tombol Edit & Hapus (Dipanggil dari HTML HTML)
+window.editKandidat = (id, no_urut, nama, foto, visi, misi, id_pemilihan) => {
+    judulFormKandidat.innerText = "Edit Data Kandidat";
+    document.getElementById('idKandidatEdit').value = id;
+    document.getElementById('noUrutKandidat').value = no_urut;
+    document.getElementById('namaKandidat').value = nama;
+    document.getElementById('fotoKandidat').value = foto;
+    document.getElementById('visiKandidat').value = visi;
+    document.getElementById('misiKandidat').value = misi;
+    document.getElementById('pemilihanKandidat').value = id_pemilihan;
+    
+    formKandidatContainer.style.display = "block";
+    formKandidatContainer.scrollIntoView({ behavior: 'smooth' });
+};
+
+window.hapusKandidat = async (id, nama) => {
+    const konfirmasi = confirm(`Yakin ingin menghapus kandidat ${nama}? Seluruh suaranya akan ikut terhapus.`);
+    if (konfirmasi) {
+        try {
+            await deleteDoc(doc(db, "kandidat", id));
+            // Catatan: Logika pengurangan/penghapusan data di riwayat_suara bisa ditambahkan nanti di sini jika dibutuhkan.
+        } catch (error) {
+            console.error("Error hapus kandidat: ", error);
+            alert("Gagal menghapus data!");
+        }
+    }
+};
