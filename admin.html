@@ -159,12 +159,55 @@
             </div>
 
             <!-- KONTEN: 3. PEMILIHAN -->
-            <div id="menuPemilihan" class="content-section" style="display: none;">
-                <section class="table-section" style="padding-top: 30px;">
-                    <h2>Pengaturan Acara Pemilihan</h2>
-                    <p>Fitur penentuan jadwal acara.</p>
-                </section>
-            </div>
+<div id="menuPemilihan" class="content-section" style="display: none;">
+    <section class="table-section" style="padding-top: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2>Pengaturan Acara Pemilihan</h2>
+            <button id="btnTambahPemilihan" class="btn" style="width: auto; padding: 10px 20px; margin: 0;">+ Buat Acara</button>
+        </div>
+
+        <!-- Form Tambah/Edit Acara -->
+        <div id="formPemilihanContainer" style="display: none; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid #0056b3;">
+            <h3 id="judulFormPemilihan" style="margin-bottom: 15px; color: #0056b3;">Buat Acara Baru</h3>
+            <form id="formPemilihan">
+                <input type="hidden" id="idPemilihanEdit">
+                
+                <label style="font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Judul Acara:</label>
+                <input type="text" id="judulPemilihan" placeholder="Contoh: Pemilihan Ketua OSIS 2026/2027" required class="input-field">
+                
+                <label style="font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Tanggal & Waktu Mulai:</label>
+                <input type="datetime-local" id="waktuMulaiPemilihan" required class="input-field">
+                
+                <label style="font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Tanggal & Waktu Selesai:</label>
+                <input type="datetime-local" id="waktuSelesaiPemilihan" required class="input-field">
+
+                <p id="pesanErrorPemilihan" style="color: red; font-size: 14px; display: none; margin-bottom: 15px;"></p>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" id="btnSimpanPemilihan" class="btn" style="margin: 0;">Simpan</button>
+                    <button type="button" id="btnBatalPemilihan" class="btn btn-outline" style="margin: 0;">Batal</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabel Daftar Acara -->
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Judul Acara</th>
+                    <th>Waktu Mulai</th>
+                    <th>Waktu Selesai</th>
+                    <th>Status</th>
+                    <th style="min-width: 150px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tablePemilihan">
+                <tr><td colspan="5" style="text-align: center;">Memuat data...</td></tr>
+            </tbody>
+        </table>
+    </section>
+</div>
+
 
             <!-- KONTEN: 4. HASIL SUARA -->
             <div id="menuHasil" class="content-section" style="display: none;">
