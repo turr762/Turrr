@@ -322,3 +322,151 @@ window.hapusKandidat = async (id, nama) => {
         }
     }
 };
+// ==========================================
+// PENGATURAN ACARA PEMILIHAN (TANPA ALERT/CONFIRM)
+// ==========================================
+const btnTambahPemilihan = document.getElementById('btnTambahPemilihan');
+const formPemilihanContainer = document.getElementById('formPemilihanContainer');
+const btnBatalPemilihan = document.getElementById('btnBatalPemilihan');
+const formPemilihan = document.getElementById('formPemilihan');
+const judulFormPemilihan = document.getElementById('judulFormPemilihan');
+const tablePemilihan = document.getElementById('tablePemilihan');
+const pesanErrorPemilihan = document.getElementById('pesanErrorPemilihan');
+
+// 1. Munculkan & Sembunyikan Form Pemilihan
+if (btnTambahPemilihan && btnBatalPemilihan) {
+    btnTambahPemilihan.addEventListener('click', () => {
+        formPemilihan.reset();
+        document.getElementById('idPemilihanEdit').value = "";
+        judulFormPemilihan.innerText = "Buat Acara Baru";
+        formPemilihanContainer.style.display = "block";
+        pesanErrorPemilihan.style.display = "none";
+    });
+
+    btnBatalPemilihan.addEventListener('click', () => {
+        formPemilihanContainer.style.display = "none";
+    });
+}
+
+// 2. Tampilkan Data Acara (Dilengkapi Indikator Status Waktu)
+onSnapshot(collection(db, "pemilihan"), (snapshot) => {
+    let tableHTML = "";
+    if (snapshot.empty) {
+        tableHTML = '<tr><td colspan="5" style="text-align: center;">Belum ada acara pemilihan.</td></tr>';
+    } else {
+        const waktuSekarang = new Date();
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const waktuMulai = new Date(data.tanggal_mulai);
+            const waktuSelesai = new Date(data.tanggal_selesai);
+            
+            // Penentuan Status Otomatis berdasarkan Jam & Tanggal
+            let status = "";
+            let warnaStatus = "";
+            if (waktuSekarang < waktuMulai) {
+                status = "Belum Mulai";
+                warnaStatus = "#f0ad4e"; // Kuning
+            } else if (waktuSekarang >= waktuMulai && waktuSekarang <= waktuSelesai) {
+                status = "Berlangsung";
+                warnaStatus = "#28a745"; // Hijau
+            } else {
+                status = "Selesai";
+                warnaStatus = "#dc3545"; // Merah
+            }
+
+            // Format tampilan supaya rapi (Contoh: 15/08/2026, 08:00)
+            const formatMulai = waktuMulai.toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+            const formatSelesai = waktuSelesai.toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+
+            tableHTML += `
+                <tr>
+                    <td style="font-weight: bold;">${data.judul}</td>
+                    <td style="font-size: 13px;">${formatMulai}</td>
+                    <td style="font-size: 13px;">${formatSelesai}</td>
+                    <td><span style="background-color: ${warnaStatus}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px;">${status}</span></td>
+                    <td>
+                        <button onclick="window.editPemilihan('${doc.id}', '${data.judul}', '${data.tanggal_mulai}', '${data.tanggal_selesai}')" class="btn btn-outline" style="padding: 5px 10px; font-size: 12px; margin-bottom: 5px; width: 100%;">Edit</button>
+                        <button onclick="window.hapusPemilihan(this, '${doc.id}')" class="btn" style="background-color: #dc3545; padding: 5px 10px; font-size: 12px; margin-bottom: 0; width: 100%;">Hapus</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+    if (tablePemilihan) tablePemilihan.innerHTML = tableHTML;
+});
+
+// 3. Proses Simpan Acara
+if (formPemilihan) {
+    formPemilihan.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        pesanErrorPemilihan.style.display = "none";
+        const btnSimpan = document.getElementById('btnSimpanPemilihan');
+        btnSimpan.innerText = "Menyimpan...";
+        btnSimpan.disabled = true;
+
+        const idEdit = document.getElementById('idPemilihanEdit').value;
+        const dataBaru = {
+            judul: document.getElementById('judulPemilihan').value,
+            tanggal_mulai: document.getElementById('waktuMulaiPemilihan').value,
+            tanggal_selesai: document.getElementById('waktuSelesaiPemilihan').value
+        };
+
+        try {
+            if (idEdit === "") {
+                await addDoc(collection(db, "pemilihan"), dataBaru);
+            } else {
+                const pemilihanRef = doc(db, "pemilihan", idEdit);
+                await updateDoc(pemilihanRef, dataBaru);
+            }
+            formPemilihan.reset();
+            formPemilihanContainer.style.display = "none";
+        } catch (error) {
+            console.error("Error simpan pemilihan: ", error);
+            pesanErrorPemilihan.innerText = "Gagal menyimpan data ke database.";
+            pesanErrorPemilihan.style.display = "block";
+        } finally {
+            btnSimpan.innerText = "Simpan";
+            btnSimpan.disabled = false;
+        }
+    });
+}
+
+// 4. Fungsi Global Edit & Hapus Pemilihan
+window.editPemilihan = (id, judul, mulai, selesai) => {
+    judulFormPemilihan.innerText = "Edit Acara Pemilihan";
+    document.getElementById('idPemilihanEdit').value = id;
+    document.getElementById('judulPemilihan').value = judul;
+    document.getElementById('waktuMulaiPemilihan').value = mulai;
+    document.getElementById('waktuSelesaiPemilihan').value = selesai;
+    
+    formPemilihanContainer.style.display = "block";
+    formPemilihanContainer.scrollIntoView({ behavior: 'smooth' });
+};
+
+window.hapusPemilihan = async (btn, id) => {
+    // Tombol diubah teksnya menjadi "Menghapus..." secara langsung tanpa alert/confirm
+    btn.innerText = "Menghapus...";
+    btn.disabled = true;
+    try {
+        await deleteDoc(doc(db, "pemilihan", id));
+    } catch (error) {
+        console.error("Error hapus pemilihan: ", error);
+        btn.innerText = "Hapus";
+        btn.disabled = false;
+    }
+};
+
+// 5. Update (Revisi) Fungsi Hapus Kandidat Tanpa Confirm()
+window.hapusKandidat = async (btn, id) => {
+    btn.innerText = "Menghapus...";
+    btn.disabled = true;
+    try {
+        await deleteDoc(doc(db, "kandidat", id));
+    } catch (error) {
+        console.error("Error hapus kandidat: ", error);
+        btn.innerText = "Hapus";
+        btn.disabled = false;
+    }
+};
