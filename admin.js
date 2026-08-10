@@ -481,7 +481,7 @@ if (containerHasilSuara) {
 }
 
 // ==========================================
-// 5. LAPORAN EXCEL
+// 5. LAPORAN EXCEL (MENJAGA ASAS RAHASIA / LUBER JURDIL)
 // ==========================================
 const btnDownloadLaporan = document.getElementById('btnDownloadLaporan');
 if (btnDownloadLaporan) {
@@ -492,42 +492,64 @@ if (btnDownloadLaporan) {
         try {
             const voterSnap = await getDocs(collection(db, "voter"));
             const riwayatSnap = await getDocs(collection(db, "riwayat_suara"));
-            const kandidatSnap = await getDocs(collection(db, "kandidat"));
 
-            const mapKandidat = {};
-            kandidatSnap.forEach(doc => mapKandidat[doc.id] = doc.data().nama);
-
+            // Hanya mencatat waktu voting untuk memastikan dia sudah memilih atau belum,
+            // tanpa melacak siapa nama kandidat yang dia pilih demi menjaga kerahasiaan suara (LUBER JURDIL).
             const mapRiwayat = {};
             riwayatSnap.forEach(doc => {
                 const data = doc.data();
-                mapRiwayat[data.id_voter] = { waktu: data.waktu_voting || "-", kandidat: mapKandidat[data.id_kandidat] || "-" };
+                mapRiwayat[data.id_voter] = {
+                    waktu: data.waktu_voting || "-"
+                };
             });
 
-            let dataLaporan = []; let no = 1;
+            let dataLaporan = []; 
+            let no = 1;
+            
             voterSnap.forEach(doc => {
-                const voter = doc.data(); const riwayat = mapRiwayat[doc.id];
+                const voter = doc.data(); 
+                const riwayat = mapRiwayat[doc.id];
+
                 dataLaporan.push({
                     "No": no++,
-                    "NIS / NIP": voter.nis || "-", "Nama Lengkap": voter.nama || "-",
-                    "Role": voter.role || "Siswa", "Kelas": voter.kelas || "-",
+                    "NIS / NIP": voter.nis || "-", 
+                    "Nama Lengkap": voter.nama || "-",
+                    "Role": voter.role || "Siswa", 
+                    "Kelas": voter.kelas || "-",
                     "Status Voting": voter.sudah_voting ? "Sudah Memilih" : "Belum Memilih",
-                    "Pilihan Kandidat": riwayat ? riwayat.kandidat : "-", "Waktu Memilih": riwayat ? riwayat.waktu : "-"
+                    "Waktu Memilih": riwayat ? riwayat.waktu : "-"
                 });
             });
 
-            if (dataLaporan.length === 0) { console.error("Tidak ada data"); return; }
+            if (dataLaporan.length === 0) { 
+                console.error("Tidak ada data"); 
+                return; 
+            }
 
             const worksheet = XLSX.utils.json_to_sheet(dataLaporan);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan_Voter");
-            worksheet['!cols'] = [{wch: 5}, {wch: 15}, {wch: 25}, {wch: 12}, {wch: 10}, {wch: 15}, {wch: 20}, {wch: 20}];
             
-            XLSX.writeFile(workbook, "Laporan_Pemilihan_OSIS_SMPN219.xlsx");
-        } catch (error) { console.error(error); } 
-        finally { btnDownloadLaporan.innerText = "Download Laporan Excel"; btnDownloadLaporan.disabled = false; }
+            // Atur lebar kolom Excel
+            worksheet['!cols'] = [
+                {wch: 5},  // No
+                {wch: 15}, // NIS
+                {wch: 25}, // Nama
+                {wch: 12}, // Role
+                {wch: 10}, // Kelas
+                {wch: 15}, // Status Voting
+                {wch: 20}  // Waktu Memilih
+            ];
+            
+            XLSX.writeFile(workbook, "Laporan_Kehadiran_Pemilihan_OSIS.xlsx");
+        } catch (error) { 
+            console.error(error); 
+        } finally { 
+            btnDownloadLaporan.innerText = "Download Laporan Excel"; 
+            btnDownloadLaporan.disabled = false; 
+        }
     });
 }
-
 // ==========================================
 // FUNGSI GLOBAL KLIK
 // ==========================================
