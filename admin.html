@@ -97,142 +97,188 @@
             </div>
 
             <!-- KONTEN: 1. KANDIDAT -->
-<div id="menuKandidat" class="content-section" style="display: none;">
-    <section class="table-section" style="padding-top: 30px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2>Kelola Kandidat</h2>
-            <button id="btnTambahKandidat" class="btn" style="width: auto; padding: 10px 20px; margin: 0;">+ Tambah Kandidat</button>
-        </div>
+            <div id="menuKandidat" class="content-section" style="display: none;">
+                <section class="table-section" style="padding-top: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h2>Kelola Kandidat</h2>
+                        <button id="btnTambahKandidat" class="btn" style="width: auto; padding: 10px 20px; margin: 0;">+ Tambah Kandidat</button>
+                    </div>
 
-        <!-- Form Tambah/Edit Kandidat (Sembunyi secara default) -->
-        <div id="formKandidatContainer" style="display: none; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid #0056b3;">
-            <h3 id="judulFormKandidat" style="margin-bottom: 15px; color: #0056b3;">Tambah Kandidat Baru</h3>
-            <form id="formKandidat">
-                <!-- Input tersembunyi untuk menyimpan ID saat mode Edit -->
-                <input type="hidden" id="idKandidatEdit">
-                
-                <input type="number" id="noUrutKandidat" placeholder="Nomor Urut (Contoh: 1)" required class="input-field">
-                <input type="text" id="namaKandidat" placeholder="Nama Kandidat (Tanpa Wakil)" required class="input-field">
-                <input type="text" id="fotoKandidat" placeholder="Link URL Foto (Gunakan ImgBB atau serupa)" required class="input-field">
-                
-                <textarea id="visiKandidat" placeholder="Visi Kandidat..." required class="input-field" style="height: 80px; resize: vertical;"></textarea>
-                <textarea id="misiKandidat" placeholder="Misi Kandidat..." required class="input-field" style="height: 80px; resize: vertical;"></textarea>
-                
-                <!-- Pilihan Acara Osis -->
-                <select id="pemilihanKandidat" required class="input-field">
-                    <option value="">-- Pilih Acara Pemilihan --</option>
-                    <!-- Nanti akan diisi otomatis oleh JS -->
-                </select>
+                    <div id="formKandidatContainer" style="display: none; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid #0056b3;">
+                        <h3 id="judulFormKandidat" style="margin-bottom: 15px; color: #0056b3;">Tambah Kandidat Baru</h3>
+                        <form id="formKandidat">
+                            <input type="hidden" id="idKandidatEdit">
+                            <input type="number" id="noUrutKandidat" placeholder="Nomor Urut (Contoh: 1)" required class="input-field">
+                            <input type="text" id="namaKandidat" placeholder="Nama Kandidat (Tanpa Wakil)" required class="input-field">
+                            <input type="text" id="fotoKandidat" placeholder="Link URL Foto (Gunakan ImgBB atau serupa)" required class="input-field">
+                            <textarea id="visiKandidat" placeholder="Visi Kandidat..." required class="input-field" style="height: 80px; resize: vertical;"></textarea>
+                            <textarea id="misiKandidat" placeholder="Misi Kandidat..." required class="input-field" style="height: 80px; resize: vertical;"></textarea>
+                            <select id="pemilihanKandidat" required class="input-field">
+                                <option value="">-- Pilih Acara Pemilihan --</option>
+                            </select>
+                            <div style="display: flex; gap: 10px;">
+                                <button type="submit" id="btnSimpanKandidat" class="btn" style="margin: 0;">Simpan</button>
+                                <button type="button" id="btnBatalKandidat" class="btn btn-outline" style="margin: 0;">Batal</button>
+                            </div>
+                        </form>
+                    </div>
 
-                <div style="display: flex; gap: 10px;">
-                    <button type="submit" id="btnSimpanKandidat" class="btn" style="margin: 0;">Simpan</button>
-                    <button type="button" id="btnBatalKandidat" class="btn btn-outline" style="margin: 0;">Batal</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Tabel Daftar Kandidat -->
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Foto</th>
-                    <th>Nama</th>
-                    <th>Visi & Misi</th>
-                    <th style="min-width: 150px;">Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="tableKandidat">
-                <tr><td colspan="5" style="text-align: center;">Memuat data...</td></tr>
-            </tbody>
-        </table>
-    </section>
-</div>
-
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Foto</th>
+                                <th>Nama</th>
+                                <th>Visi & Misi</th>
+                                <th style="min-width: 150px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableKandidat">
+                            <tr><td colspan="5" style="text-align: center;">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
 
             <!-- KONTEN: 2. VOTER -->
             <div id="menuVoter" class="content-section" style="display: none;">
                 <section class="table-section" style="padding-top: 30px;">
-                    <h2>Kelola Akun Voter</h2>
-                    <p>Fitur tambah, import excel, dan nonaktifkan voter.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <h2>Kelola Akun Voter</h2>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="btnTambahVoter" class="btn" style="width: auto; padding: 10px 20px; margin: 0;">+ Tambah Manual</button>
+                            <label for="fileExcelVoter" class="btn btn-outline" style="width: auto; padding: 10px 20px; margin: 0; cursor: pointer;">Import Excel</label>
+                            <input type="file" id="fileExcelVoter" accept=".xlsx, .xls" style="display: none;">
+                        </div>
+                    </div>
+
+                    <p id="pesanImportVoter" style="color: #28a745; font-size: 14px; display: none; margin-bottom: 15px;"></p>
+
+                    <div id="formVoterContainer" style="display: none; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid #0056b3;">
+                        <h3 id="judulFormVoter" style="margin-bottom: 15px; color: #0056b3;">Tambah Voter Baru</h3>
+                        <form id="formVoter">
+                            <input type="hidden" id="idVoterEdit">
+                            <input type="text" id="nisVoterInput" placeholder="NIS / NIP" required class="input-field">
+                            <input type="text" id="passVoterInput" placeholder="Password" required class="input-field">
+                            <input type="text" id="namaVoterInput" placeholder="Nama Lengkap" required class="input-field">
+                            
+                            <label style="font-size: 12px; font-weight: 600;">Role / Jabatan:</label>
+                            <select id="roleVoterInput" required class="input-field">
+                                <option value="Siswa">Siswa</option>
+                                <option value="Guru">Guru</option>
+                                <option value="Tata Usaha">Tata Usaha</option>
+                            </select>
+                            
+                            <input type="text" id="kelasVoterInput" placeholder="Kelas (Contoh: 9A)" class="input-field">
+                            <input type="number" id="absenVoterInput" placeholder="Nomor Absen" class="input-field">
+                            
+                            <label style="font-size: 12px; font-weight: 600;">Terdaftar Pada Acara:</label>
+                            <select id="pemilihanVoterInput" required class="input-field">
+                                <option value="">-- Pilih Acara Pemilihan --</option>
+                            </select>
+
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button type="submit" id="btnSimpanVoter" class="btn" style="margin: 0;">Simpan</button>
+                                <button type="button" id="btnBatalVoter" class="btn btn-outline" style="margin: 0;">Batal</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="search-bar" style="margin-top: 15px;">
+                        <input type="text" id="searchDataVoter" placeholder="Cari NIS atau Nama..." class="input-field">
+                    </div>
+
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>NIS</th>
+                                <th>Nama</th>
+                                <th>Role & Kelas</th>
+                                <th>Status</th>
+                                <th style="min-width: 180px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableDataVoter">
+                            <tr><td colspan="5" style="text-align: center;">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
                 </section>
             </div>
 
             <!-- KONTEN: 3. PEMILIHAN -->
-<div id="menuPemilihan" class="content-section" style="display: none;">
-    <section class="table-section" style="padding-top: 30px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2>Pengaturan Acara Pemilihan</h2>
-            <button id="btnTambahPemilihan" class="btn" style="width: auto; padding: 10px 20px; margin: 0;">+ Buat Acara</button>
-        </div>
+            <div id="menuPemilihan" class="content-section" style="display: none;">
+                <section class="table-section" style="padding-top: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h2>Pengaturan Acara Pemilihan</h2>
+                        <button id="btnTambahPemilihan" class="btn" style="width: auto; padding: 10px 20px; margin: 0;">+ Buat Acara</button>
+                    </div>
 
-        <!-- Form Tambah/Edit Acara -->
-        <div id="formPemilihanContainer" style="display: none; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid #0056b3;">
-            <h3 id="judulFormPemilihan" style="margin-bottom: 15px; color: #0056b3;">Buat Acara Baru</h3>
-            <form id="formPemilihan">
-                <input type="hidden" id="idPemilihanEdit">
-                
-                <label style="font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Judul Acara:</label>
-                <input type="text" id="judulPemilihan" placeholder="Contoh: Pemilihan Ketua OSIS 2026/2027" required class="input-field">
-                
-                <label style="font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Tanggal & Waktu Mulai:</label>
-                <input type="datetime-local" id="waktuMulaiPemilihan" required class="input-field">
-                
-                <label style="font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Tanggal & Waktu Selesai:</label>
-                <input type="datetime-local" id="waktuSelesaiPemilihan" required class="input-field">
+                    <div id="formPemilihanContainer" style="display: none; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid #0056b3;">
+                        <h3 id="judulFormPemilihan" style="margin-bottom: 15px; color: #0056b3;">Buat Acara Baru</h3>
+                        <form id="formPemilihan">
+                            <input type="hidden" id="idPemilihanEdit">
+                            <label style="font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Judul Acara:</label>
+                            <input type="text" id="judulPemilihan" placeholder="Contoh: Pemilihan Ketua OSIS 2026/2027" required class="input-field">
+                            <label style="font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Waktu Mulai:</label>
+                            <input type="datetime-local" id="waktuMulaiPemilihan" required class="input-field">
+                            <label style="font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Waktu Selesai:</label>
+                            <input type="datetime-local" id="waktuSelesaiPemilihan" required class="input-field">
+                            <p id="pesanErrorPemilihan" style="color: red; font-size: 14px; display: none; margin-bottom: 15px;"></p>
+                            <div style="display: flex; gap: 10px;">
+                                <button type="submit" id="btnSimpanPemilihan" class="btn" style="margin: 0;">Simpan</button>
+                                <button type="button" id="btnBatalPemilihan" class="btn btn-outline" style="margin: 0;">Batal</button>
+                            </div>
+                        </form>
+                    </div>
 
-                <p id="pesanErrorPemilihan" style="color: red; font-size: 14px; display: none; margin-bottom: 15px;"></p>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Judul Acara</th>
+                                <th>Waktu Mulai</th>
+                                <th>Waktu Selesai</th>
+                                <th>Status</th>
+                                <th style="min-width: 150px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablePemilihan">
+                            <tr><td colspan="5" style="text-align: center;">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
 
-                <div style="display: flex; gap: 10px;">
-                    <button type="submit" id="btnSimpanPemilihan" class="btn" style="margin: 0;">Simpan</button>
-                    <button type="button" id="btnBatalPemilihan" class="btn btn-outline" style="margin: 0;">Batal</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Tabel Daftar Acara -->
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>Judul Acara</th>
-                    <th>Waktu Mulai</th>
-                    <th>Waktu Selesai</th>
-                    <th>Status</th>
-                    <th style="min-width: 150px;">Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="tablePemilihan">
-                <tr><td colspan="5" style="text-align: center;">Memuat data...</td></tr>
-            </tbody>
-        </table>
-    </section>
-</div>
-
-
-           <!-- KONTEN: 4. HASIL SUARA -->
-<div id="menuHasil" class="content-section" style="display: none;">
-    <section class="table-section" style="padding-top: 30px;">
-        <h2>Hasil Suara Pemilihan</h2>
-        <p style="color: #666; margin-bottom: 20px;">Statistik perolehan suara kandidat secara real-time.</p>
-
-        <!-- Container Kartu Hasil Suara -->
-        <div id="containerHasilSuara" style="display: flex; flex-direction: column; gap: 20px;">
-            <p style="text-align: center;">Memuat data hasil suara...</p>
-        </div>
-    </section>
-</div>
+            <!-- KONTEN: 4. HASIL SUARA -->
+            <div id="menuHasil" class="content-section" style="display: none;">
+                <section class="table-section" style="padding-top: 30px;">
+                    <h2>Hasil Suara Pemilihan</h2>
+                    <p style="color: #666; margin-bottom: 20px;">Statistik perolehan suara kandidat secara real-time.</p>
+                    <div id="containerHasilSuara" style="display: flex; flex-direction: column; gap: 20px;">
+                        <p style="text-align: center;">Memuat data hasil suara...</p>
+                    </div>
+                </section>
+            </div>
 
             <!-- KONTEN: 5. LAPORAN -->
             <div id="menuLaporan" class="content-section" style="display: none;">
                 <section class="table-section" style="padding-top: 30px;">
-                    <h2>Export Laporan</h2>
-                    <p>Fitur download laporan ke Excel.</p>
+                    <h2>Export Laporan Pemilihan</h2>
+                    <p style="color: #666; margin-bottom: 20px;">Unduh rekapitulasi data dan status suara pemilih ke dalam file Excel.</p>
+                    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; max-width: 500px;">
+                        <h3 style="color: #0056b3; margin-bottom: 10px;">Laporan Rekapitulasi Voter</h3>
+                        <p style="font-size: 14px; color: #666; margin-bottom: 20px;">File Excel akan mencakup informasi NIS, Nama, Kelas, Status Voting, dan pilihan waktu suara masuk.</p>
+                        <button id="btnDownloadLaporan" class="btn" style="width: 100%; padding: 12px; font-size: 16px;">Download Laporan Excel</button>
+                    </div>
                 </section>
             </div>
 
         </div>
     </div>
 
+    <!-- Library SheetJS untuk Import/Export Excel (Sangat Penting untuk menu Voter & Laporan) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Script JS Utama -->
     <script type="module" src="admin.js"></script>
 </body>
 </html>
