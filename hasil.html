@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil - OSIS SMPN 219</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header style="justify-content: space-between; padding: 15px 30px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <img src="assets/img/logo.png" alt="Logo OSIS" style="width: 40px; height: 40px; object-fit: cover;">
+            <h1 style="font-size: 18px;">SMPN 219 JAKARTA</h1>
+        </div>
+        <a href="index.html" class="btn btn-outline" style="padding: 5px 15px; margin: 0; background: white; text-decoration: none; font-size: 14px;">Kembali</a>
+    </header>
+
+    <main class="main-container" style="align-items: flex-start; padding-top: 40px;">
+        <div style="width: 100%; max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #0056b3; font-size: 24px; margin-bottom: 5px;">Perolehan Suara Sementara</h2>
+                <p style="color: #666; font-size: 14px;">Data di bawah ini diperbarui secara real-time.</p>
+            </div>
+
+            <div id="containerHasilPublik" style="display: flex; flex-direction: column; gap: 20px;">
+                <p style="text-align: center;">Memuat data hasil suara...</p>
+            </div>
+
+        </div>
+    </main>
+
+    <footer style="margin-top: auto;">
+        &copy; OSIS SMPN 219 JAKARTA
+    </footer>
+
+    <!-- Menghubungkan ke file JS dengan nama baru -->
+    <script type="module" src="hasil.js"></script>
+</body>
+</html>
