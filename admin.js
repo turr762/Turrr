@@ -26,16 +26,14 @@ const judulHalaman = document.getElementById('judulHalaman');
 const btnLogoutAdmin = document.getElementById('btnLogoutAdmin');
 
 // ==========================================
-// FUNGSI MUAT DATA DASHBOARD (REAL-TIME)
+// FUNGSI MUAT DATA DASHBOARD
 // ==========================================
 function muatDataDashboard() {
-    const kandidatRef = collection(db, "kandidat");
-    onSnapshot(kandidatRef, (snapshot) => {
+    onSnapshot(collection(db, "kandidat"), (snapshot) => {
         document.getElementById('totalKandidat').innerText = snapshot.size;
     });
 
-    const voterRef = collection(db, "voter");
-    onSnapshot(voterRef, (snapshot) => {
+    onSnapshot(collection(db, "voter"), (snapshot) => {
         let total = snapshot.size;
         let sudah = 0;
         let belum = 0;
@@ -48,14 +46,7 @@ function muatDataDashboard() {
                 sudah++;
             } else {
                 belum++;
-                tableHTML += `
-                    <tr>
-                        <td>${no++}</td>
-                        <td>${data.nis || '-'}</td>
-                        <td>${data.nama || '-'}</td>
-                        <td>${data.kelas || '-'}</td>
-                    </tr>
-                `;
+                tableHTML += `<tr><td>${no++}</td><td>${data.nis || '-'}</td><td>${data.nama || '-'}</td><td>${data.kelas || '-'}</td></tr>`;
             }
         });
 
@@ -64,37 +55,24 @@ function muatDataDashboard() {
         document.getElementById('belumVoting').innerText = belum;
 
         const tbody = document.getElementById('tableBelumVoting');
-        if (belum === 0 && total > 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Semua pemilih sudah menggunakan hak suaranya!</td></tr>';
-        } else if (total === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Belum ada data pemilih.</td></tr>';
-        } else {
-            tbody.innerHTML = tableHTML;
-        }
+        if (belum === 0 && total > 0) tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Semua pemilih sudah menggunakan hak suaranya!</td></tr>';
+        else if (total === 0) tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Belum ada data pemilih.</td></tr>';
+        else tbody.innerHTML = tableHTML;
     });
 }
 
-// ==========================================
-// FITUR PENCARIAN DASHBOARD
-// ==========================================
 const searchNIS = document.getElementById('searchNISBelumVoting');
 if (searchNIS) {
     searchNIS.addEventListener('input', (e) => {
         const keyword = e.target.value.toLowerCase();
-        const barisTabel = document.querySelectorAll('#tableBelumVoting tr');
-
-        barisTabel.forEach(baris => {
-            const kolomNIS = baris.cells[1];
-            if (kolomNIS) {
-                const teksNIS = kolomNIS.innerText.toLowerCase();
-                baris.style.display = teksNIS.includes(keyword) ? '' : 'none';
-            }
+        document.querySelectorAll('#tableBelumVoting tr').forEach(baris => {
+            if (baris.cells[1]) baris.style.display = baris.cells[1].innerText.toLowerCase().includes(keyword) ? '' : 'none';
         });
     });
 }
 
 // ==========================================
-// CEK LOGIN SAAT HALAMAN DIBUKA
+// CEK LOGIN & NAVIGASI SPA
 // ==========================================
 if (sessionStorage.getItem("adminLoggedIn") === "true") {
     loginSection.style.display = "none";
@@ -102,29 +80,20 @@ if (sessionStorage.getItem("adminLoggedIn") === "true") {
     muatDataDashboard();
 }
 
-// ==========================================
-// LOGIKA LOGIN ADMIN
-// ==========================================
 if (formLoginAdmin) {
     formLoginAdmin.addEventListener('submit', async (e) => {
         e.preventDefault(); 
         pesanError.style.display = "none";
-        pesanError.innerText = "";
-
         const nis = document.getElementById('nisAdmin').value;
         const pass = document.getElementById('passAdmin').value;
         const btnSubmit = formLoginAdmin.querySelector('button');
         const originalText = btnSubmit.innerText;
-        
         btnSubmit.innerText = "Memproses...";
         btnSubmit.disabled = true;
 
         try {
-            const adminRef = collection(db, "admin");
-            const q = query(adminRef, where("nis", "==", nis), where("password", "==", pass));
-            const querySnapshot = await getDocs(q);
-
-            if (!querySnapshot.empty) {
+            const q = query(collection(db, "admin"), where("nis", "==", nis), where("password", "==", pass));
+            if (!(await getDocs(q)).empty) {
                 sessionStorage.setItem("adminLoggedIn", "true");
                 loginSection.style.display = "none";
                 dashboardSection.style.display = "flex";
@@ -135,7 +104,7 @@ if (formLoginAdmin) {
                 pesanError.style.display = "block";
             }
         } catch (error) {
-            console.error("Error saat login: ", error);
+            console.error(error);
             pesanError.innerText = "Terjadi kesalahan sistem, coba lagi.";
             pesanError.style.display = "block";
         } finally {
@@ -145,19 +114,13 @@ if (formLoginAdmin) {
     });
 }
 
-// ==========================================
-// NAVIGASI SPA & LOGOUT
-// ==========================================
 adminMenuLinks.forEach(link => {
     link.addEventListener('click', (e) => {
         e.preventDefault(); 
         if (link.id === 'btnLogoutAdmin') return; 
-
-        const targetId = link.getAttribute('data-target');
         contentSections.forEach(section => section.style.display = 'none');
         adminMenuLinks.forEach(menu => menu.classList.remove('active'));
-
-        document.getElementById(targetId).style.display = 'block';
+        document.getElementById(link.getAttribute('data-target')).style.display = 'block';
         link.classList.add('active');
         judulHalaman.innerText = link.innerText.replace(/[0-9].\s/, ''); 
     });
@@ -176,52 +139,39 @@ if (btnLogoutAdmin) {
 // ==========================================
 // 1. KELOLA KANDIDAT
 // ==========================================
-const btnTambahKandidat = document.getElementById('btnTambahKandidat');
 const formKandidatContainer = document.getElementById('formKandidatContainer');
-const btnBatalKandidat = document.getElementById('btnBatalKandidat');
 const formKandidat = document.getElementById('formKandidat');
-const judulFormKandidat = document.getElementById('judulFormKandidat');
-const tableKandidat = document.getElementById('tableKandidat');
-const selectPemilihanKandidat = document.getElementById('pemilihanKandidat');
 
-if (btnTambahKandidat && btnBatalKandidat) {
-    btnTambahKandidat.addEventListener('click', () => {
-        formKandidat.reset();
-        document.getElementById('idKandidatEdit').value = "";
-        judulFormKandidat.innerText = "Tambah Kandidat Baru";
-        formKandidatContainer.style.display = "block";
-    });
-    btnBatalKandidat.addEventListener('click', () => formKandidatContainer.style.display = "none");
-}
+document.getElementById('btnTambahKandidat')?.addEventListener('click', () => {
+    formKandidat.reset();
+    document.getElementById('idKandidatEdit').value = "";
+    document.getElementById('judulFormKandidat').innerText = "Tambah Kandidat Baru";
+    formKandidatContainer.style.display = "block";
+});
+document.getElementById('btnBatalKandidat')?.addEventListener('click', () => formKandidatContainer.style.display = "none");
 
 onSnapshot(collection(db, "kandidat"), (snapshot) => {
     let tableHTML = "";
-    if (snapshot.empty) {
-        tableHTML = '<tr><td colspan="5" style="text-align: center;">Belum ada kandidat terdaftar.</td></tr>';
-    } else {
-        const dataKandidat = [];
+    if (snapshot.empty) tableHTML = '<tr><td colspan="5" style="text-align: center;">Belum ada kandidat terdaftar.</td></tr>';
+    else {
+        let dataKandidat = [];
         snapshot.forEach(doc => dataKandidat.push({ id: doc.id, ...doc.data() }));
-        dataKandidat.sort((a, b) => a.no_urut - b.no_urut);
-
-        dataKandidat.forEach(data => {
+        dataKandidat.sort((a, b) => a.no_urut - b.no_urut).forEach(data => {
             tableHTML += `
                 <tr>
                     <td style="font-weight: bold; font-size: 18px; text-align: center;">${data.no_urut}</td>
-                    <td><img src="${data.foto}" alt="Foto ${data.nama}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;"></td>
+                    <td><img src="${data.foto}" alt="Foto" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;"></td>
                     <td style="font-weight: bold;">${data.nama}</td>
-                    <td style="font-size: 12px;">
-                        <strong>Visi:</strong> ${data.visi.substring(0, 30)}... <br>
-                        <strong>Misi:</strong> ${data.misi.substring(0, 30)}...
-                    </td>
+                    <td style="font-size: 12px;"><strong>Visi:</strong> ${data.visi.substring(0, 30)}... <br><strong>Misi:</strong> ${data.misi.substring(0, 30)}...</td>
                     <td>
                         <button onclick="window.editKandidat('${data.id}', '${data.no_urut}', '${data.nama}', '${data.foto}', '${data.visi}', '${data.misi}', '${data.id_pemilihan}')" class="btn btn-outline" style="padding: 5px 10px; font-size: 12px; margin-bottom: 5px; width: 100%;">Edit</button>
                         <button onclick="window.hapusKandidat(this, '${data.id}')" class="btn" style="background-color: #dc3545; padding: 5px 10px; font-size: 12px; margin-bottom: 0; width: 100%;">Hapus</button>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         });
     }
-    if (tableKandidat) tableKandidat.innerHTML = tableHTML;
+    const tableEl = document.getElementById('tableKandidat');
+    if (tableEl) tableEl.innerHTML = tableHTML;
 });
 
 if (formKandidat) {
@@ -243,82 +193,61 @@ if (formKandidat) {
         };
 
         try {
-            if (idEdit === "") {
-                await addDoc(collection(db, "kandidat"), dataBaru);
-            } else {
+            if (idEdit === "") await addDoc(collection(db, "kandidat"), dataBaru);
+            else {
                 delete dataBaru.jumlah_suara; 
                 await updateDoc(doc(db, "kandidat", idEdit), dataBaru);
             }
             formKandidat.reset();
             formKandidatContainer.style.display = "none";
-        } catch (error) {
-            console.error(error);
-            alert("Gagal menyimpan data kandidat!");
-        } finally {
-            btnSimpan.innerText = "Simpan";
-            btnSimpan.disabled = false;
-        }
+        } catch (error) { console.error(error); } 
+        finally { btnSimpan.innerText = "Simpan"; btnSimpan.disabled = false; }
     });
 }
 
 // ==========================================
 // 2. KELOLA VOTER (MANUAL & IMPORT EXCEL)
 // ==========================================
-const btnTambahVoter = document.getElementById('btnTambahVoter');
 const formVoterContainer = document.getElementById('formVoterContainer');
-const btnBatalVoter = document.getElementById('btnBatalVoter');
 const formVoter = document.getElementById('formVoter');
-const judulFormVoter = document.getElementById('judulFormVoter');
-const tableDataVoter = document.getElementById('tableDataVoter');
-const selectPemilihanVoter = document.getElementById('pemilihanVoterInput');
 const roleVoterInput = document.getElementById('roleVoterInput');
 const kelasVoterInput = document.getElementById('kelasVoterInput');
 const absenVoterInput = document.getElementById('absenVoterInput');
 const fileExcelVoter = document.getElementById('fileExcelVoter');
 const pesanImportVoter = document.getElementById('pesanImportVoter');
 
-if (btnTambahVoter && btnBatalVoter) {
-    btnTambahVoter.addEventListener('click', () => {
-        formVoter.reset();
-        document.getElementById('idVoterEdit').value = "";
-        judulFormVoter.innerText = "Tambah Voter Baru";
-        formVoterContainer.style.display = "block";
-        kelasVoterInput.disabled = false;
-        absenVoterInput.disabled = false;
-    });
-    btnBatalVoter.addEventListener('click', () => formVoterContainer.style.display = "none");
-}
+document.getElementById('btnTambahVoter')?.addEventListener('click', () => {
+    formVoter.reset();
+    document.getElementById('idVoterEdit').value = "";
+    document.getElementById('judulFormVoter').innerText = "Tambah Voter Baru";
+    formVoterContainer.style.display = "block";
+    kelasVoterInput.disabled = false;
+    absenVoterInput.disabled = false;
+});
+document.getElementById('btnBatalVoter')?.addEventListener('click', () => formVoterContainer.style.display = "none");
 
 if (roleVoterInput) {
     roleVoterInput.addEventListener('change', (e) => {
         if (e.target.value === "Guru" || e.target.value === "Tata Usaha") {
-            kelasVoterInput.value = "-";
-            absenVoterInput.value = "";
-            kelasVoterInput.disabled = true;
-            absenVoterInput.disabled = true;
-            kelasVoterInput.style.backgroundColor = "#e9ecef";
-            absenVoterInput.style.backgroundColor = "#e9ecef";
+            kelasVoterInput.value = "-"; absenVoterInput.value = "";
+            kelasVoterInput.disabled = true; absenVoterInput.disabled = true;
+            kelasVoterInput.style.backgroundColor = "#e9ecef"; absenVoterInput.style.backgroundColor = "#e9ecef";
         } else {
-            kelasVoterInput.value = "";
-            kelasVoterInput.disabled = false;
-            absenVoterInput.disabled = false;
-            kelasVoterInput.style.backgroundColor = "#fff";
-            absenVoterInput.style.backgroundColor = "#fff";
+            kelasVoterInput.value = ""; kelasVoterInput.disabled = false; absenVoterInput.disabled = false;
+            kelasVoterInput.style.backgroundColor = "#fff"; absenVoterInput.style.backgroundColor = "#fff";
         }
     });
 }
 
 onSnapshot(collection(db, "voter"), (snapshot) => {
     let tableHTML = "";
-    if (snapshot.empty) {
-        tableHTML = '<tr><td colspan="5" style="text-align: center;">Belum ada voter terdaftar.</td></tr>';
-    } else {
+    if (snapshot.empty) tableHTML = '<tr><td colspan="5" style="text-align: center;">Belum ada voter terdaftar.</td></tr>';
+    else {
         snapshot.forEach(doc => {
             const data = doc.data();
             let textStatus = data.is_active ? "Aktif" : "Nonaktif";
             let warnaStatus = data.is_active ? "#28a745" : "#dc3545";
             let infoKelas = data.role === "Siswa" ? `Kelas: ${data.kelas || '-'}` : '';
-
             tableHTML += `
                 <tr>
                     <td style="font-weight: bold;">${data.nis}</td>
@@ -330,28 +259,22 @@ onSnapshot(collection(db, "voter"), (snapshot) => {
                         <button onclick="window.toggleStatusVoter(this, '${doc.id}', ${data.is_active})" class="btn" style="background-color: ${data.is_active ? '#f0ad4e' : '#28a745'}; padding: 5px 10px; font-size: 12px; margin-bottom: 5px; width: 100%;">${data.is_active ? 'Nonaktifkan' : 'Aktifkan'}</button>
                         <button onclick="window.hapusVoter(this, '${doc.id}')" class="btn" style="background-color: #dc3545; padding: 5px 10px; font-size: 12px; margin-bottom: 0; width: 100%;">Hapus</button>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         });
     }
-    if (tableDataVoter) tableDataVoter.innerHTML = tableHTML;
+    const tableEl = document.getElementById('tableDataVoter');
+    if (tableEl) tableEl.innerHTML = tableHTML;
 });
 
-const searchDataVoter = document.getElementById('searchDataVoter');
-if (searchDataVoter) {
-    searchDataVoter.addEventListener('input', (e) => {
-        const keyword = e.target.value.toLowerCase();
-        const barisTabel = document.querySelectorAll('#tableDataVoter tr');
-        barisTabel.forEach(baris => {
-            const kolomNIS = baris.cells[0]; 
-            const kolomNama = baris.cells[1];
-            if (kolomNIS && kolomNama) {
-                const teksBaris = kolomNIS.innerText.toLowerCase() + " " + kolomNama.innerText.toLowerCase();
-                baris.style.display = teksBaris.includes(keyword) ? '' : 'none';
-            }
-        });
+document.getElementById('searchDataVoter')?.addEventListener('input', (e) => {
+    const keyword = e.target.value.toLowerCase();
+    document.querySelectorAll('#tableDataVoter tr').forEach(baris => {
+        if (baris.cells[0] && baris.cells[1]) {
+            const teks = baris.cells[0].innerText.toLowerCase() + " " + baris.cells[1].innerText.toLowerCase();
+            baris.style.display = teks.includes(keyword) ? '' : 'none';
+        }
     });
-}
+});
 
 if (formVoter) {
     formVoter.addEventListener('submit', async (e) => {
@@ -361,15 +284,14 @@ if (formVoter) {
         btnSimpan.disabled = true;
 
         const idEdit = document.getElementById('idVoterEdit').value;
-        const roleVal = document.getElementById('roleVoterInput').value;
-        
+        const roleVal = roleVoterInput.value;
         const dataBaru = {
             nis: document.getElementById('nisVoterInput').value,
             password: document.getElementById('passVoterInput').value,
             nama: document.getElementById('namaVoterInput').value,
             role: roleVal,
-            kelas: roleVal === "Siswa" ? document.getElementById('kelasVoterInput').value : "-",
-            no_absen: roleVal === "Siswa" ? parseInt(document.getElementById('absenVoterInput').value) : null,
+            kelas: roleVal === "Siswa" ? kelasVoterInput.value : "-",
+            no_absen: roleVal === "Siswa" ? parseInt(absenVoterInput.value) : null,
             id_pemilihan: document.getElementById('pemilihanVoterInput').value,
         };
 
@@ -378,20 +300,15 @@ if (formVoter) {
                 dataBaru.is_active = true;
                 dataBaru.sudah_voting = false;
                 await addDoc(collection(db, "voter"), dataBaru);
-            } else {
-                await updateDoc(doc(db, "voter", idEdit), dataBaru);
-            }
+            } else await updateDoc(doc(db, "voter", idEdit), dataBaru);
             formVoter.reset();
             formVoterContainer.style.display = "none";
-        } catch (error) {
-            console.error(error);
-        } finally {
-            btnSimpan.innerText = "Simpan";
-            btnSimpan.disabled = false;
-        }
+        } catch (error) { console.error(error); }
+        finally { btnSimpan.innerText = "Simpan"; btnSimpan.disabled = false; }
     });
 }
 
+// LOGIKA SHEETJS IMPORT EXCEL
 if (fileExcelVoter) {
     fileExcelVoter.addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -406,44 +323,37 @@ if (fileExcelVoter) {
             try {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
-                const sheetName = workbook.SheetNames[0];
-                const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+                const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                 
                 if (excelData.length === 0) {
                     pesanImportVoter.innerText = "File Excel kosong!";
-                    pesanImportVoter.style.color = "red";
-                    return;
+                    pesanImportVoter.style.color = "red"; return;
                 }
-
-                pesanImportVoter.innerText = `Menyimpan ${excelData.length} data ke database. Mohon tunggu...`;
+                pesanImportVoter.innerText = `Menyimpan ${excelData.length} data. Mohon tunggu...`;
 
                 for (let i = 0; i < excelData.length; i++) {
-                    const baris = excelData[i];
-                    const dataBaru = {
-                        nis: String(baris.nis || ""),
-                        password: String(baris.password || ""),
-                        nama: String(baris.nama || ""),
-                        role: String(baris.role || "Siswa"),
-                        kelas: String(baris.role) === "Siswa" ? String(baris.kelas || "") : "-",
-                        no_absen: String(baris.role) === "Siswa" ? parseInt(baris.no_absen || 0) : null,
-                        id_pemilihan: String(baris.id_pemilihan || ""),
-                        is_active: true,
-                        sudah_voting: false
-                    };
-                    if (dataBaru.nis !== "") {
-                        await addDoc(collection(db, "voter"), dataBaru);
+                    const b = excelData[i];
+                    if (String(b.nis || "") !== "") {
+                        await addDoc(collection(db, "voter"), {
+                            nis: String(b.nis || ""),
+                            password: String(b.password || ""),
+                            nama: String(b.nama || ""),
+                            role: String(b.role || "Siswa"),
+                            kelas: String(b.role) === "Siswa" ? String(b.kelas || "") : "-",
+                            no_absen: String(b.role) === "Siswa" ? parseInt(b.no_absen || 0) : null,
+                            id_pemilihan: String(b.id_pemilihan || ""),
+                            is_active: true, sudah_voting: false
+                        });
                     }
                 }
-
                 pesanImportVoter.innerText = "Import Excel Berhasil!";
                 pesanImportVoter.style.color = "#28a745";
                 setTimeout(() => pesanImportVoter.style.display = "none", 3000);
-                fileExcelVoter.value = "";
             } catch (error) {
                 console.error(error);
                 pesanImportVoter.innerText = "Terjadi kesalahan saat mengolah file Excel.";
                 pesanImportVoter.style.color = "red";
-            }
+            } finally { fileExcelVoter.value = ""; }
         };
         reader.readAsArrayBuffer(file);
     });
@@ -452,74 +362,57 @@ if (fileExcelVoter) {
 // ==========================================
 // 3. PENGATURAN ACARA PEMILIHAN
 // ==========================================
-const btnTambahPemilihan = document.getElementById('btnTambahPemilihan');
 const formPemilihanContainer = document.getElementById('formPemilihanContainer');
-const btnBatalPemilihan = document.getElementById('btnBatalPemilihan');
 const formPemilihan = document.getElementById('formPemilihan');
-const judulFormPemilihan = document.getElementById('judulFormPemilihan');
-const tablePemilihan = document.getElementById('tablePemilihan');
-const pesanErrorPemilihan = document.getElementById('pesanErrorPemilihan');
 
-if (btnTambahPemilihan && btnBatalPemilihan) {
-    btnTambahPemilihan.addEventListener('click', () => {
-        formPemilihan.reset();
-        document.getElementById('idPemilihanEdit').value = "";
-        judulFormPemilihan.innerText = "Buat Acara Baru";
-        formPemilihanContainer.style.display = "block";
-        pesanErrorPemilihan.style.display = "none";
-    });
-    btnBatalPemilihan.addEventListener('click', () => formPemilihanContainer.style.display = "none");
-}
+document.getElementById('btnTambahPemilihan')?.addEventListener('click', () => {
+    formPemilihan.reset();
+    document.getElementById('idPemilihanEdit').value = "";
+    document.getElementById('judulFormPemilihan').innerText = "Buat Acara Baru";
+    formPemilihanContainer.style.display = "block";
+});
+document.getElementById('btnBatalPemilihan')?.addEventListener('click', () => formPemilihanContainer.style.display = "none");
 
-// Sinkronisasi Data Pemilihan ke Dropdown (Kandidat & Voter)
 onSnapshot(collection(db, "pemilihan"), (snapshot) => {
     let opsiHTML = '<option value="">-- Pilih Acara Pemilihan --</option>';
     let tableHTML = "";
     
-    if (snapshot.empty) {
-        tableHTML = '<tr><td colspan="5" style="text-align: center;">Belum ada acara pemilihan.</td></tr>';
-    } else {
+    if (snapshot.empty) tableHTML = '<tr><td colspan="5" style="text-align: center;">Belum ada acara pemilihan.</td></tr>';
+    else {
         const waktuSekarang = new Date();
         snapshot.forEach(doc => {
             const data = doc.data();
-            
-            // Tambahkan ke opsi dropdown
             opsiHTML += `<option value="${doc.id}">${data.judul}</option>`;
-
-            // Proses untuk tabel
-            const waktuMulai = new Date(data.tanggal_mulai);
-            const waktuSelesai = new Date(data.tanggal_selesai);
             
-            let status = waktuSekarang < waktuMulai ? "Belum Mulai" : (waktuSekarang <= waktuSelesai ? "Berlangsung" : "Selesai");
-            let warnaStatus = waktuSekarang < waktuMulai ? "#f0ad4e" : (waktuSekarang <= waktuSelesai ? "#28a745" : "#dc3545");
-
-            const formatMulai = waktuMulai.toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
-            const formatSelesai = waktuSelesai.toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+            const wMulai = new Date(data.tanggal_mulai);
+            const wSelesai = new Date(data.tanggal_selesai);
+            let status = waktuSekarang < wMulai ? "Belum Mulai" : (waktuSekarang <= wSelesai ? "Berlangsung" : "Selesai");
+            let warnaStatus = waktuSekarang < wMulai ? "#f0ad4e" : (waktuSekarang <= wSelesai ? "#28a745" : "#dc3545");
 
             tableHTML += `
                 <tr>
                     <td style="font-weight: bold;">${data.judul}</td>
-                    <td style="font-size: 13px;">${formatMulai}</td>
-                    <td style="font-size: 13px;">${formatSelesai}</td>
+                    <td style="font-size: 13px;">${wMulai.toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                    <td style="font-size: 13px;">${wSelesai.toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })}</td>
                     <td><span style="background-color: ${warnaStatus}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px;">${status}</span></td>
                     <td>
                         <button onclick="window.editPemilihan('${doc.id}', '${data.judul}', '${data.tanggal_mulai}', '${data.tanggal_selesai}')" class="btn btn-outline" style="padding: 5px 10px; font-size: 12px; margin-bottom: 5px; width: 100%;">Edit</button>
                         <button onclick="window.hapusPemilihan(this, '${doc.id}')" class="btn" style="background-color: #dc3545; padding: 5px 10px; font-size: 12px; margin-bottom: 0; width: 100%;">Hapus</button>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         });
     }
-    
-    if (selectPemilihanKandidat) selectPemilihanKandidat.innerHTML = opsiHTML;
-    if (selectPemilihanVoter) selectPemilihanVoter.innerHTML = opsiHTML;
-    if (tablePemilihan) tablePemilihan.innerHTML = tableHTML;
+    const selectKan = document.getElementById('pemilihanKandidat');
+    const selectVot = document.getElementById('pemilihanVoterInput');
+    const tabPem = document.getElementById('tablePemilihan');
+    if (selectKan) selectKan.innerHTML = opsiHTML;
+    if (selectVot) selectVot.innerHTML = opsiHTML;
+    if (tabPem) tabPem.innerHTML = tableHTML;
 });
 
 if (formPemilihan) {
     formPemilihan.addEventListener('submit', async (e) => {
         e.preventDefault();
-        pesanErrorPemilihan.style.display = "none";
         const btnSimpan = document.getElementById('btnSimpanPemilihan');
         btnSimpan.innerText = "Menyimpan...";
         btnSimpan.disabled = true;
@@ -532,28 +425,114 @@ if (formPemilihan) {
         };
 
         try {
-            if (idEdit === "") {
-                await addDoc(collection(db, "pemilihan"), dataBaru);
-            } else {
-                await updateDoc(doc(db, "pemilihan", idEdit), dataBaru);
-            }
+            if (idEdit === "") await addDoc(collection(db, "pemilihan"), dataBaru);
+            else await updateDoc(doc(db, "pemilihan", idEdit), dataBaru);
             formPemilihan.reset();
             formPemilihanContainer.style.display = "none";
-        } catch (error) {
-            pesanErrorPemilihan.innerText = "Gagal menyimpan data ke database.";
-            pesanErrorPemilihan.style.display = "block";
-        } finally {
-            btnSimpan.innerText = "Simpan";
-            btnSimpan.disabled = false;
-        }
+        } catch (error) { console.error(error); } 
+        finally { btnSimpan.innerText = "Simpan"; btnSimpan.disabled = false; }
     });
 }
 
 // ==========================================
-// FUNGSI GLOBAL EDIT (DIPANGGIL DARI HTML)
+// 4. HASIL SUARA
+// ==========================================
+const containerHasilSuara = document.getElementById('containerHasilSuara');
+if (containerHasilSuara) {
+    onSnapshot(collection(db, "kandidat"), (snapshot) => {
+        let kandidatList = [];
+        let totalSuaraSemua = 0;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const suara = data.jumlah_suara || 0;
+            totalSuaraSemua += suara;
+            kandidatList.push({ id: doc.id, ...data, jumlah_suara: suara });
+        });
+
+        kandidatList.sort((a, b) => a.no_urut - b.no_urut);
+        let htmlContent = "";
+
+        if (kandidatList.length === 0) htmlContent = '<p style="text-align: center;">Belum ada kandidat terdaftar.</p>';
+        else {
+            kandidatList.forEach(kandidat => {
+                let persentase = totalSuaraSemua > 0 ? ((kandidat.jumlah_suara / totalSuaraSemua) * 100).toFixed(1) : 0;
+                htmlContent += `
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 5px solid #0056b3;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <img src="${kandidat.foto}" alt="Foto" style="width: 45px; height: 45px; object-fit: cover; border-radius: 50%;">
+                                <div>
+                                    <h4 style="margin: 0; color: #333; font-size: 16px;">No. Urut ${kandidat.no_urut} - ${kandidat.nama}</h4>
+                                    <span style="font-size: 12px; color: #666;">Perolehan: <strong>${kandidat.jumlah_suara}</strong> Suara</span>
+                                </div>
+                            </div>
+                            <span style="font-size: 16px; font-weight: bold; color: #0056b3;">${persentase}%</span>
+                        </div>
+                        <div style="width: 100%; background-color: #e9ecef; border-radius: 6px; height: 12px; overflow: hidden;">
+                            <div style="width: ${persentase}%; background-color: #0056b3; height: 100%; transition: width 0.4s ease;"></div>
+                        </div>
+                    </div>`;
+            });
+            htmlContent += `<div style="text-align: right; font-size: 14px; color: #666; margin-top: 10px;">Total Suara Masuk: <strong>${totalSuaraSemua} Suara</strong></div>`;
+        }
+        containerHasilSuara.innerHTML = htmlContent;
+    });
+}
+
+// ==========================================
+// 5. LAPORAN EXCEL
+// ==========================================
+const btnDownloadLaporan = document.getElementById('btnDownloadLaporan');
+if (btnDownloadLaporan) {
+    btnDownloadLaporan.addEventListener('click', async () => {
+        btnDownloadLaporan.innerText = "Menyiapkan Laporan...";
+        btnDownloadLaporan.disabled = true;
+
+        try {
+            const voterSnap = await getDocs(collection(db, "voter"));
+            const riwayatSnap = await getDocs(collection(db, "riwayat_suara"));
+            const kandidatSnap = await getDocs(collection(db, "kandidat"));
+
+            const mapKandidat = {};
+            kandidatSnap.forEach(doc => mapKandidat[doc.id] = doc.data().nama);
+
+            const mapRiwayat = {};
+            riwayatSnap.forEach(doc => {
+                const data = doc.data();
+                mapRiwayat[data.id_voter] = { waktu: data.waktu_voting || "-", kandidat: mapKandidat[data.id_kandidat] || "-" };
+            });
+
+            let dataLaporan = []; let no = 1;
+            voterSnap.forEach(doc => {
+                const voter = doc.data(); const riwayat = mapRiwayat[doc.id];
+                dataLaporan.push({
+                    "No": no++,
+                    "NIS / NIP": voter.nis || "-", "Nama Lengkap": voter.nama || "-",
+                    "Role": voter.role || "Siswa", "Kelas": voter.kelas || "-",
+                    "Status Voting": voter.sudah_voting ? "Sudah Memilih" : "Belum Memilih",
+                    "Pilihan Kandidat": riwayat ? riwayat.kandidat : "-", "Waktu Memilih": riwayat ? riwayat.waktu : "-"
+                });
+            });
+
+            if (dataLaporan.length === 0) { console.error("Tidak ada data"); return; }
+
+            const worksheet = XLSX.utils.json_to_sheet(dataLaporan);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan_Voter");
+            worksheet['!cols'] = [{wch: 5}, {wch: 15}, {wch: 25}, {wch: 12}, {wch: 10}, {wch: 15}, {wch: 20}, {wch: 20}];
+            
+            XLSX.writeFile(workbook, "Laporan_Pemilihan_OSIS_SMPN219.xlsx");
+        } catch (error) { console.error(error); } 
+        finally { btnDownloadLaporan.innerText = "Download Laporan Excel"; btnDownloadLaporan.disabled = false; }
+    });
+}
+
+// ==========================================
+// FUNGSI GLOBAL KLIK
 // ==========================================
 window.editKandidat = (id, no_urut, nama, foto, visi, misi, id_pemilihan) => {
-    judulFormKandidat.innerText = "Edit Data Kandidat";
+    document.getElementById('judulFormKandidat').innerText = "Edit Data Kandidat";
     document.getElementById('idKandidatEdit').value = id;
     document.getElementById('noUrutKandidat').value = no_urut;
     document.getElementById('namaKandidat').value = nama;
@@ -566,7 +545,7 @@ window.editKandidat = (id, no_urut, nama, foto, visi, misi, id_pemilihan) => {
 };
 
 window.editVoter = (id, nis, pass, nama, role, kelas, absen, id_pemilihan) => {
-    judulFormVoter.innerText = "Edit Data Voter";
+    document.getElementById('judulFormVoter').innerText = "Edit Data Voter";
     document.getElementById('idVoterEdit').value = id;
     document.getElementById('nisVoterInput').value = nis;
     document.getElementById('passVoterInput').value = pass;
@@ -581,7 +560,7 @@ window.editVoter = (id, nis, pass, nama, role, kelas, absen, id_pemilihan) => {
 };
 
 window.editPemilihan = (id, judul, mulai, selesai) => {
-    judulFormPemilihan.innerText = "Edit Acara Pemilihan";
+    document.getElementById('judulFormPemilihan').innerText = "Edit Acara Pemilihan";
     document.getElementById('idPemilihanEdit').value = id;
     document.getElementById('judulPemilihan').value = judul;
     document.getElementById('waktuMulaiPemilihan').value = mulai;
@@ -590,135 +569,37 @@ window.editPemilihan = (id, judul, mulai, selesai) => {
     formPemilihanContainer.scrollIntoView({ behavior: 'smooth' });
 };
 
-// ==========================================
-// FUNGSI GLOBAL HAPUS & STATUS (TANPA ALERT)
-// ==========================================
 window.hapusKandidat = async (btn, id) => {
-    btn.innerText = "Menghapus...";
-    btn.disabled = true;
-    try {
-        await deleteDoc(doc(db, "kandidat", id));
-    } catch (error) {
-        console.error(error);
-        alert("Gagal menghapus! Pesan Error: " + error.message); // Dimunculkan sementara untuk cek bug
-        btn.innerText = "Hapus";
-        btn.disabled = false;
-    }
+    btn.innerText = "Menghapus..."; btn.disabled = true;
+    try { await deleteDoc(doc(db, "kandidat", id)); } 
+    catch (error) { console.error(error); btn.innerText = "Hapus"; btn.disabled = false; }
 };
 
 window.hapusVoter = async (btn, id) => {
-    btn.innerText = "Menghapus...";
-    btn.disabled = true;
-    try {
-        await deleteDoc(doc(db, "voter", id));
-    } catch (error) {
-        console.error(error);
-        btn.innerText = "Hapus";
-        btn.disabled = false;
-    }
+    btn.innerText = "Menghapus..."; btn.disabled = true;
+    try { await deleteDoc(doc(db, "voter", id)); } 
+    catch (error) { console.error(error); btn.innerText = "Hapus"; btn.disabled = false; }
 };
 
 window.hapusPemilihan = async (btn, id) => {
-    btn.innerText = "Menghapus...";
-    btn.disabled = true;
-    try {
-        await deleteDoc(doc(db, "pemilihan", id));
-    } catch (error) {
-        console.error(error);
-        btn.innerText = "Hapus";
-        btn.disabled = false;
-    }
+    btn.innerText = "Menghapus..."; btn.disabled = true;
+    try { await deleteDoc(doc(db, "pemilihan", id)); } 
+    catch (error) { console.error(error); btn.innerText = "Hapus"; btn.disabled = false; }
 };
 
 window.toggleStatusVoter = async (btn, id, isActiveSaatIni) => {
-    btn.innerText = "Memproses...";
-    btn.disabled = true;
+    btn.innerText = "Memproses..."; btn.disabled = true;
     try {
-        const statusBaru = !isActiveSaatIni;
         const voterRef = doc(db, "voter", id);
-
-        if (statusBaru === false) {
-            const q = query(collection(db, "riwayat_suara"), where("id_voter", "==", id));
-            const riwayatSnap = await getDocs(q);
-            
+        if (!isActiveSaatIni) {
+            const riwayatSnap = await getDocs(query(collection(db, "riwayat_suara"), where("id_voter", "==", id)));
             if (!riwayatSnap.empty) {
                 riwayatSnap.forEach(async (riwayatDoc) => {
-                    const dataRiwayat = riwayatDoc.data();
-                    const kandidatRef = doc(db, "kandidat", dataRiwayat.id_kandidat);
-                    await updateDoc(kandidatRef, { jumlah_suara: increment(-1) });
+                    await updateDoc(doc(db, "kandidat", riwayatDoc.data().id_kandidat), { jumlah_suara: increment(-1) });
                     await deleteDoc(doc(db, "riwayat_suara", riwayatDoc.id));
                 });
                 await updateDoc(voterRef, { is_active: false, sudah_voting: false });
-            } else {
-                await updateDoc(voterRef, { is_active: false });
-            }
-        } else {
-            await updateDoc(voterRef, { is_active: true });
-        }
-    } catch (error) {
-        console.error(error);
-        btn.innerText = isActiveSaatIni ? "Nonaktifkan" : "Aktifkan";
-        btn.disabled = false;
-    }
+            } else await updateDoc(voterRef, { is_active: false });
+        } else await updateDoc(voterRef, { is_active: true });
+    } catch (error) { console.error(error); btn.innerText = isActiveSaatIni ? "Nonaktifkan" : "Aktifkan"; btn.disabled = false; }
 };
-// ==========================================
-// 4. HASIL SUARA (STATISTIK & PROGRESS BAR)
-// ==========================================
-const containerHasilSuara = document.getElementById('containerHasilSuara');
-
-if (containerHasilSuara) {
-    onSnapshot(collection(db, "kandidat"), (snapshot) => {
-        let kandidatList = [];
-        let totalSuaraSemua = 0;
-
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const suara = data.jumlah_suara || 0;
-            totalSuaraSemua += suara;
-            kandidatList.push({ id: doc.id, ...data, jumlah_suara: suara });
-        });
-
-        // Urutkan berdasarkan nomor urut
-        kandidatList.sort((a, b) => a.no_urut - b.no_urut);
-
-        let htmlContent = "";
-
-        if (kandidatList.length === 0) {
-            htmlContent = '<p style="text-align: center;">Belum ada kandidat terdaftar.</p>';
-        } else {
-            kandidatList.forEach(kandidat => {
-                // Hitung persentase suara
-                let persentase = totalSuaraSemua > 0 ? ((kandidat.jumlah_suara / totalSuaraSemua) * 100).toFixed(1) : 0;
-
-                htmlContent += `
-                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 5px solid #0056b3;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <div style="display: flex; align-items: center; gap: 15px;">
-                                <img src="${kandidat.foto}" alt="Foto" style="width: 45px; height: 45px; object-fit: cover; border-radius: 50%;">
-                                <div>
-                                    <h4 style="margin: 0; color: #333; font-size: 16px;">No. Urut ${kandidat.no_urut} - ${kandidat.nama}</h4>
-                                    <span style="font-size: 12px; color: #666;">Perolehan: <strong>${kandidat.jumlah_suara}</strong> Suara</span>
-                                </div>
-                            </div>
-                            <span style="font-size: 16px; font-weight: bold; color: #0056b3;">${persentase}%</span>
-                        </div>
-                        
-                        <!-- Progress Bar Suara -->
-                        <div style="width: 100%; background-color: #e9ecef; border-radius: 6px; height: 12px; overflow: hidden;">
-                            <div style="width: ${persentase}%; background-color: #0056b3; height: 100%; transition: width 0.4s ease;"></div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            // Tambahkan info total suara keseluruhan di bagian bawah
-            htmlContent += `
-                <div style="text-align: right; font-size: 14px; color: #666; margin-top: 10px;">
-                    Total Suara Masuk Seluruhnya: <strong>${totalSuaraSemua} Suara</strong>
-                </div>
-            `;
-        }
-
-        containerHasilSuara.innerHTML = htmlContent;
-    });
-}
