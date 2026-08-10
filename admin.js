@@ -661,3 +661,64 @@ window.toggleStatusVoter = async (btn, id, isActiveSaatIni) => {
         btn.disabled = false;
     }
 };
+// ==========================================
+// 4. HASIL SUARA (STATISTIK & PROGRESS BAR)
+// ==========================================
+const containerHasilSuara = document.getElementById('containerHasilSuara');
+
+if (containerHasilSuara) {
+    onSnapshot(collection(db, "kandidat"), (snapshot) => {
+        let kandidatList = [];
+        let totalSuaraSemua = 0;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const suara = data.jumlah_suara || 0;
+            totalSuaraSemua += suara;
+            kandidatList.push({ id: doc.id, ...data, jumlah_suara: suara });
+        });
+
+        // Urutkan berdasarkan nomor urut
+        kandidatList.sort((a, b) => a.no_urut - b.no_urut);
+
+        let htmlContent = "";
+
+        if (kandidatList.length === 0) {
+            htmlContent = '<p style="text-align: center;">Belum ada kandidat terdaftar.</p>';
+        } else {
+            kandidatList.forEach(kandidat => {
+                // Hitung persentase suara
+                let persentase = totalSuaraSemua > 0 ? ((kandidat.jumlah_suara / totalSuaraSemua) * 100).toFixed(1) : 0;
+
+                htmlContent += `
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 5px solid #0056b3;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <img src="${kandidat.foto}" alt="Foto" style="width: 45px; height: 45px; object-fit: cover; border-radius: 50%;">
+                                <div>
+                                    <h4 style="margin: 0; color: #333; font-size: 16px;">No. Urut ${kandidat.no_urut} - ${kandidat.nama}</h4>
+                                    <span style="font-size: 12px; color: #666;">Perolehan: <strong>${kandidat.jumlah_suara}</strong> Suara</span>
+                                </div>
+                            </div>
+                            <span style="font-size: 16px; font-weight: bold; color: #0056b3;">${persentase}%</span>
+                        </div>
+                        
+                        <!-- Progress Bar Suara -->
+                        <div style="width: 100%; background-color: #e9ecef; border-radius: 6px; height: 12px; overflow: hidden;">
+                            <div style="width: ${persentase}%; background-color: #0056b3; height: 100%; transition: width 0.4s ease;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Tambahkan info total suara keseluruhan di bagian bawah
+            htmlContent += `
+                <div style="text-align: right; font-size: 14px; color: #666; margin-top: 10px;">
+                    Total Suara Masuk Seluruhnya: <strong>${totalSuaraSemua} Suara</strong>
+                </div>
+            `;
+        }
+
+        containerHasilSuara.innerHTML = htmlContent;
+    });
+}
